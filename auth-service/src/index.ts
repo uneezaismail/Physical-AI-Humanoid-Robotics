@@ -27,6 +27,15 @@ app.use(
   })
 );
 
+// Root endpoint for Railway health check
+app.get("/", (_req, res) => {
+  res.json({
+    status: "healthy",
+    service: "auth-service",
+    timestamp: new Date().toISOString(),
+  });
+});
+
 // Health check endpoint
 app.get("/api/auth/health", (_req, res) => {
   res.json({
@@ -123,5 +132,7 @@ app.use(
 
 // Start server
 app.listen(Number(PORT), "0.0.0.0", () => {
-  console.log("Auth service started");
+  console.log(`Auth service started on port ${PORT}`);
+  console.log(`Health check available at: http://0.0.0.0:${PORT}/`);
+  console.log(`Auth API available at: http://0.0.0.0:${PORT}/api/auth/*`);
 });
