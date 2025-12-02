@@ -5,13 +5,14 @@
 // Docusaurus doesn't expose process.env to browser
 // Use window.location for dynamic API URL or hardcode for development
 const API_BASE_URL =
-  typeof window !== 'undefined' && window.location.hostname === 'localhost'
-    ? 'http://localhost:8000'
-    : 'https://physical-ai-humanoid-robotics-production.up.railway.app';
+  typeof window !== "undefined" && window.location.hostname === "localhost"
+    ? "http://localhost:8000"
+    : "https://physical-ai-humanoid-robotics-production.up.railway.app";
 
 export interface ChatRequest {
   query: string;
   top_k?: number;
+  selected_text?: string;
 }
 
 export interface Source {
@@ -40,17 +41,23 @@ export class APIClient {
 
   async sendChatMessage(
     query: string,
+    selectedText?: string,
     topK: number = 5,
   ): Promise<ChatResponse> {
+    const body: ChatRequest = {
+      query,
+      top_k: topK,
+    };
+    if (selectedText && selectedText.trim().length > 0) {
+      body.selected_text = selectedText;
+    }
+
     const response = await fetch(`${this.baseURL}/api/chat/`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        query,
-        top_k: topK,
-      } as ChatRequest),
+      body: JSON.stringify(body),
     });
 
     if (!response.ok) {

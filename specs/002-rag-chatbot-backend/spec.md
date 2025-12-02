@@ -138,17 +138,15 @@ A student is reading Section 2.4 ("Sensor Stack") and highlights the text "Intel
 
 Note: Content ingestion is handled by a standalone CLI script, not an API endpoint. Only query functionality is exposed via API.
 
-- **FR-015**: System MUST expose a `POST /api/query` endpoint that accepts:
-  - `query` (required, string, max 500 words)
-  - `selected_text` (optional, string, max 200 words)
-
-  And returns:
-  - `answer` (string)
-  - `sources` (array of objects: `{chapter, section, filename, relevance_score}`)
+- **FR-015**: System MUST expose the following endpoints:
+  - `POST /api/chat/`: Standard chat retrieval. Accepts `{query, top_k, selected_text}`. Returns `{answer, sources, ...}`.
+  - `POST /api/chat/stream`: Streaming response via SSE. Accepts same input as standard chat.
+  - `POST /api/chat/text-selection`: Contextual query based on selected text.
+  - `GET /api/health`: Health check returning service status.
 
 **Content Ingestion (CLI Script)**
 
-- **FR-016**: System MUST provide a standalone CLI script (e.g., `ingest.py` or `python -m app.ingest`) that triggers content ingestion from `frontend/docs/` directory and outputs:
+- **FR-016**: System MUST provide a standalone CLI script (specifically `scripts/ingest_docs.py`) that triggers content ingestion from `frontend/docs/` directory and outputs:
   - Exit code: 0 for success, non-zero for errors
   - Terminal output showing: files processed count, chunks created count, and detailed error messages (if any)
   - Progress logging to stdout during execution (e.g., "Processing chapter-1-embodied-ai.mdx... 15 chunks created")
@@ -198,7 +196,7 @@ Note: Content ingestion is handled by a standalone CLI script, not an API endpoi
 - **AgentResponse**: LLM-generated answer with source citations. Attributes:
   - `answer`: Generated text response (string)
   - `sources`: Array of `{chapter, section, filename, score}` objects
-  - `model_used`: Model identifier (e.g., "gemini-1.5-pro")
+  - `model_used`: Model identifier (e.g., "gemini-2.0-flash")
   - `latency`: Time to generate answer (milliseconds)
 
 ## Success Criteria *(mandatory)*
@@ -253,7 +251,8 @@ Note: Content ingestion is handled by a standalone CLI script, not an API endpoi
   - `pydantic` (data validation)
   - `qdrant-client` (vector database client)
   - `python-dotenv` (environment variable management)
-  - Development tools: `ruff`, `black`, `mypy`, `pytest`
+  - `sse-starlette` (for streaming responses)
+  - Development tools: `pylint`, `black`, `mypy`, `pytest`
 
 - **Environment Variables**: All API keys (`GEMINI_API_KEY`, `QDRANT_URL`, `QDRANT_API_KEY`) MUST be loaded from `.env` file or system environment - no hardcoding.
 
@@ -261,7 +260,7 @@ Note: Content ingestion is handled by a standalone CLI script, not an API endpoi
 
 - **Future-Proofing**: The system must handle future chapters (e.g., Chapter 29, Chapter 30) without code changes - only configuration updates (if any).
 
-- **Code Quality**: All code must pass `ruff` linting, `black` formatting, and `mypy` type checking before deployment.
+- **Code Quality**: All code must pass `pylint` linting, `black` formatting, and `mypy` type checking before deployment.
 
 - **Testing**: The `tests/` directory must contain at least 3 test files covering embedding generation, RAG retrieval, and chunking logic.
 

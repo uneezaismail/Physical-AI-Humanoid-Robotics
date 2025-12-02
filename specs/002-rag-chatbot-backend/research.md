@@ -39,7 +39,7 @@ response = client.embeddings.create(
 
 # For chat completions (agents)
 response = client.chat.completions.create(
-    model="gemini-1.5-pro",
+    model="gemini-2.0-flash",
     messages=[{"role": "user", "content": "prompt with RAG context"}]
 )
 ```
@@ -259,7 +259,7 @@ from app.rag.embeddings import get_embedding_client
 
 app = FastAPI()
 
-@app.post("/api/query")
+@app.post("/api/chat/")
 async def query_rag(
     request: QueryRequest,
     qdrant=Depends(get_qdrant_client),

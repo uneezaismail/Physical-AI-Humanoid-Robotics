@@ -1,146 +1,149 @@
-"""
-Qdrant vector database client service.
-
-Handles connection and operations with Qdrant Cloud for vector embeddings.
-"""
-
-from qdrant_client import QdrantClient
-from qdrant_client.models import Distance, VectorParams, PointStruct
-from typing import List, Dict, Optional
-from uuid import UUID
+import os
+import asyncio
 import logging
+from typing import List, Dict, Any
 
-from ..config import settings
+from qdrant_client import AsyncQdrantClient, models
+
+from app.config import settings
 
 logger = logging.getLogger(__name__)
 
 
-class QdrantService:
-    """Service for interacting with Qdrant vector database."""
+class QdrantClient:
+    """Service for interacting with Qdrant Cloud vector database."""
 
     def __init__(self):
-        """Initialize Qdrant client connection."""
-        self.client = QdrantClient(
+        """
+        Initialize AsyncQdrantClient.
+        """
+        self.client = AsyncQdrantClient(
             url=settings.qdrant_url,
             api_key=settings.qdrant_api_key,
         )
         self.collection_name = settings.qdrant_collection_name
 
-    async def create_collection(self, vector_size: int = 384) -> None:
+        logger.info(f"Initialized QdrantClient for collection: {self.collection_name}")
+
+    async def recreate_collection(self, vector_size: int = 768, on_disk_payload: bool = True):
         """
-        Create the embeddings collection if it doesn't exist.
+        Recreate the Qdrant collection, deleting if it exists.
+        This is useful for fresh ingestion.
+        """
+        logger.info(f"Recreating Qdrant collection: {self.collection_name}")
+        await self.client.recreate_collection(
+            collection_name=self.collection_name,
+            vectors_config=models.VectorParams(size=vector_size, distance=models.Distance.COSINE),
+            on_disk_payload=on_disk_payload
+        )
+        logger.info(f"Qdrant collection {self.collection_name} recreated successfully.")
 
-        Creates a collection with:
-        - 384 dimensions (FastEmbed BAAI/bge-small-en-v1.5)
-        - Cosine distance metric
-
-        Args:
-            vector_size: Embedding dimension size (default: 384 for bge-small-en-v1.5)
+    async def upsert_points(self, points: List[models.PointStruct]):
+        """
+        Upsert points (vectors + payload) into the Qdrant collection.
         """
         try:
-            collections = self.client.get_collections().collections
-            collection_exists = any(
-                col.name == self.collection_name for col in collections
+            operation_info = await self.client.upsert(
+                collection_name=self.collection_name,
+                wait=True,
+                points=points,
             )
-
-            if not collection_exists:
-                self.client.create_collection(
-                    collection_name=self.collection_name,
-                    vectors_config=VectorParams(
-                        size=vector_size,
-                        distance=Distance.COSINE
-                    )
-                )
-                logger.info(f"Created collection: {self.collection_name} with {vector_size} dimensions")
-            else:
-                logger.info(f"Collection already exists: {self.collection_name}")
-
+            logger.info(f"Qdrant upsert operation: {operation_info}")
         except Exception as e:
-            logger.error(f"Failed to create collection: {str(e)}")
+            logger.error(f"Failed to upsert points to Qdrant: {str(e)}")
             raise
 
-    async def upsert_embeddings(
-        self,
-        embeddings: List[Dict],
-        batch_size: int = 50
-    ) -> None:
-        """
-        Insert or update embeddings in Qdrant in batches.
-
-        Args:
-            embeddings: List of embedding dictionaries with:
-                - id: Unique identifier
-                - vector: Embedding vector (3072 dimensions)
-                - payload: Metadata (module, week, section, content, etc.)
-            batch_size: Number of embeddings to upload per batch (default: 50)
-        """
-        try:
-            points = [
-                PointStruct(
-                    id=str(emb["id"]),
-                    vector=emb["vector"],
-                    payload=emb["payload"]
-                )
-                for emb in embeddings
-            ]
-
-            # Upload in batches to avoid timeouts
-            total_uploaded = 0
-            for i in range(0, len(points), batch_size):
-                batch = points[i:i + batch_size]
-                self.client.upsert(
-                    collection_name=self.collection_name,
-                    points=batch,
-                    wait=True  # Wait for operation to complete
-                )
-                total_uploaded += len(batch)
-                logger.info(f"Batch {i//batch_size + 1}: Uploaded {total_uploaded}/{len(points)} embeddings")
-
-            logger.info(f"✅ Successfully upserted all {len(points)} embeddings")
-
-        except Exception as e:
-            logger.error(f"Failed to upsert embeddings: {str(e)}")
-            raise
-
-    async def search_similar(
+    async def search_points(
         self,
         query_vector: List[float],
         limit: int = 5,
-        score_threshold: float = 0.2
-    ) -> List[Dict]:
+        query_filter: models.Filter = None,
+        with_payload: bool = True
+    ) -> List[Dict[str, Any]]:
         """
-        Search for similar embeddings.
-
-        Args:
-            query_vector: Query embedding vector (384 dimensions)
-            limit: Maximum number of results to return
-            score_threshold: Minimum similarity score (0.0-1.0)
-
-        Returns:
-            List of search results with scores and metadata
+        Search for points in the Qdrant collection.
         """
         try:
-            # Use search method for older Qdrant client versions
-            results = self.client.search(
+            search_result = await self.client.search(
                 collection_name=self.collection_name,
                 query_vector=query_vector,
+                query_filter=query_filter,
                 limit=limit,
-                score_threshold=score_threshold
+                with_payload=with_payload,
+            )
+            return [hit.dict() for hit in search_result]
+        except Exception as e:
+            logger.error(f"Failed to search Qdrant: {str(e)}")
+            raise
+
+    async def search_textbook(
+        self,
+        query: str,
+        filter_unit: str = None,
+        limit: int = 5
+    ) -> List[Dict[str, Any]]:
+        """
+        Retrieves technical content from the Physical AI textbook using hybrid search.
+
+        Args:
+            query: The semantic search string (e.g., "Inverse kinematics formula").
+            filter_unit: Optional. Limit search to a specific unit (e.g., "01-part-1-foundations-lab").
+            limit: Maximum number of results to return.
+
+        Returns:
+            JSON string containing list of matches with 'content', 'page_id', and 'relevance_score'.
+        """
+        from app.services.embeddings import embedding_service # Import locally to avoid circular dependency
+
+        try:
+            # 1. Generate Embedding
+            query_vector = await embedding_service.generate_embedding(query)
+
+            # 2. Define Filters (if any)
+            qdrant_filter = None
+            if filter_unit:
+                qdrant_filter = models.Filter(
+                    must=[
+                        models.FieldCondition(
+                            key="source_file",
+                            range=models.MatchText(text=filter_unit)
+                        )
+                    ]
+                )
+
+            # 3. Hybrid Search (Dense + Sparse/Keyword) - using search_points for dense part
+            # For a true hybrid search, Qdrant's capabilities would be leveraged more deeply here.
+            # Currently, this is primarily a dense vector search with an optional payload filter.
+            results = await self.search_points(
+                query_vector=query_vector,
+                query_filter=qdrant_filter,
+                limit=limit,
+                with_payload=True
             )
 
-            return [
-                {
-                    "id": result.id,
-                    "score": result.score,
-                    "payload": result.payload
-                }
-                for result in results
-            ]
+            # Reformat results to match the expected 'content', 'page_id', 'relevance_score'
+            formatted_results = []
+            for r in results:
+                payload = r.get('payload', {})
+                # Extract chapter/topic path for citation
+                source_file_path = payload.get('source_file', 'N/A')
+                # Example: ../frontend/docs/01-part-1-foundations-lab/01-chapter-1-embodied-ai/00-intro.mdx
+                # Convert to frontend-friendly path for user display
+                frontend_path = source_file_path.replace('../frontend/docs/', '')
+
+                formatted_results.append({
+                    "content": payload.get('content', 'N/A'),
+                    "page_id": frontend_path, # This will be the path for the user to navigate
+                    "header": payload.get('header', 'N/A'),
+                    "relevance_score": r.get('score', 0.0)
+                })
+
+            return formatted_results
 
         except Exception as e:
-            logger.error(f"Search failed: {str(e)}")
+            logger.error(f"Textbook retrieval failed: {str(e)}")
             raise
 
 
 # Global instance
-qdrant_service = QdrantService()
+qdrant_client = QdrantClient()

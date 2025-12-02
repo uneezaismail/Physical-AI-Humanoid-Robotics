@@ -9,18 +9,21 @@ Handles:
 - Error handling
 """
 
+import json
 import logging
-from typing import List, Optional
 import os
+from typing import List, Optional
 
+from agents import OpenAIChatCompletionsModel, RunConfig, Runner
 from fastapi import APIRouter, HTTPException, status
-from pydantic import BaseModel, Field
-from agents import Runner, RunConfig, OpenAIChatCompletionsModel
 from openai import AsyncOpenAI
+from pydantic import BaseModel, Field
+from sse_starlette.sse import EventSourceResponse
 
-from ..services.query_processor import query_processor
+from ..agent import AgentContext, textbook_agent
 from ..config import settings
-from ..agent import textbook_agent, AgentContext
+from ..services.agent_service import agent_service
+from ..services.query_processor import query_processor
 
 logger = logging.getLogger(__name__)
 
@@ -34,6 +37,12 @@ class ChatRequest(BaseModel):
     query: str = Field(..., min_length=1, max_length=500, description="User question")
     top_k: Optional[int] = Field(
         5, ge=1, le=10, description="Number of sources to retrieve"
+    )
+    selected_text: Optional[str] = Field(
+        None,
+        min_length=0,
+        max_length=2000,
+        description="Optional user-selected text from book",
     )
 
 
@@ -58,6 +67,21 @@ class ChatResponse(BaseModel):
     query_processed: str  # Show enhanced query for debugging
 
 
+@router.post("/stream")
+async def chat_stream(request: ChatRequest):
+    """
+    Stream agent response using Server-Sent Events (SSE).
+    """
+
+    async def event_generator():
+        async for event in agent_service.stream_agent_response(
+            request.query, request.selected_text
+        ):
+            yield {"data": json.dumps(event)}
+
+    return EventSourceResponse(event_generator())
+
+
 @router.post("/", response_model=ChatResponse, status_code=status.HTTP_200_OK)
 async def chat(request: ChatRequest):
     """
@@ -79,59 +103,67 @@ async def chat(request: ChatRequest):
         query_info = query_processor.process_query(request.query)
         enhanced_query = query_info["enhanced_query"]
 
+        # Construct final input for the agent
+        agent_input = enhanced_query
+        if request.selected_text:
+            selection_context = f"\n\nUser Selected Text:\n{request.selected_text}\n\n"
+            agent_input = f"{enhanced_query}{selection_context}Please explain the selected text in the context of the question if relevant."
+
         # Step 2: Configure OpenAI Client for Gemini
         client = AsyncOpenAI(
             api_key=settings.gemini_api_key,
-            base_url="https://generativelanguage.googleapis.com/v1beta/openai/"
+            base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
         )
-        
+
         # Create model wrapper for Gemini
         model = OpenAIChatCompletionsModel(
-            model="gemini-2.0-flash", # Using flash model as per config/intent
+            model="gemini-2.0-flash",  # Using flash model as per config/intent
             openai_client=client,
         )
-        
+
         # Create RunConfig with the model
         run_config = RunConfig(model=model)
-        
+
         # Note: We must update the agent's model or pass it in RunConfig?
         # In the example, `model` is passed to Agent AND RunConfig.
         # textbook_agent is global, so we should probably override its model for this run via RunConfig or set it here.
         # The example passes `run_config=config` to Runner.run.
-        # However, Agent definition also has `model`. 
+        # However, Agent definition also has `model`.
         # We'll update the global agent's model dynamically or just rely on RunConfig if it overrides.
         # Actually, looking at the example, passing `model` to Agent is cleaner, but our agent is pre-defined.
         # Let's just pass run_config.
-        
+
         # Create a context to capture retrieved chunks
         agent_context = AgentContext()
 
         # Step 3: Run Agent
         result = await Runner.run(
-            textbook_agent, 
-            input=enhanced_query, 
+            textbook_agent,
+            input=agent_input,
             context=agent_context,
-            run_config=run_config
+            run_config=run_config,
         )
 
         # Step 4: Format Response
         retrieved_chunks = agent_context.retrieved_chunks
-        
+
         sources = []
         for i, chunk in enumerate(retrieved_chunks, 1):
-            payload = chunk.get('payload', {})
-            sources.append(Source(
-                excerpt_num=i,
-                title=payload.get('title', 'Unknown'),
-                section=payload.get('section', 'Unknown'),
-                file_path=payload.get('file_path', ''),
-                score=chunk.get('score', 0.0)
-            ))
+            payload = chunk.get("payload", {})
+            sources.append(
+                Source(
+                    excerpt_num=i,
+                    title=payload.get("title", "Unknown"),
+                    section=payload.get("section", "Unknown"),
+                    file_path=payload.get("file_path", ""),
+                    score=chunk.get("score", 0.0),
+                )
+            )
 
         final_answer = result.final_output
         has_answer = "not covered" not in final_answer.lower() and len(sources) > 0
         if "No relevant information found" in final_answer:
-             has_answer = False
+            has_answer = False
 
         return ChatResponse(
             answer=final_answer,
@@ -166,28 +198,30 @@ async def answer_from_selection(request: TextSelectionRequest):
     """
     try:
         logger.info(f"Text selection query: '{request.query}'")
-        
+
         # Configure OpenAI Client for Gemini
         client = AsyncOpenAI(
             api_key=settings.gemini_api_key,
-            base_url="https://generativelanguage.googleapis.com/v1beta/openai/"
+            base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
         )
-        
+
         model = OpenAIChatCompletionsModel(
             model="gemini-2.0-flash",
             openai_client=client,
         )
-        
+
         run_config = RunConfig(model=model)
-        
+
         selection_context = f"\n\nUser Selected Text:\n{request.selected_text}\n\n"
         full_input = f"{request.query}{selection_context}Please explain the selected text in the context of the question."
 
-        result = await Runner.run(textbook_agent, input=full_input, run_config=run_config)
-        
+        result = await Runner.run(
+            textbook_agent, input=full_input, run_config=run_config
+        )
+
         return ChatResponse(
             answer=result.final_output,
-            sources=[], # Text selection doesn't pull from vector DB usually, or we could try to search too.
+            sources=[],  # Text selection doesn't pull from vector DB usually, or we could try to search too.
             has_answer=True,
             confidence="high",
             num_sources=0,
@@ -210,5 +244,5 @@ async def health_check():
         "service": "chat",
         "retrieval": "qdrant",
         "agent": "openai-agents-sdk",
-        "model": "gemini"
+        "model": "gemini",
     }

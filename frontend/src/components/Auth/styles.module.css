@@ -1,0 +1,243 @@
+/**
+ * Auth Components Styling
+ * Theme: Cyber-Physical Dark Mode
+ */
+
+/* --- Modal Container --- */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(3, 5, 18, 0.85);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000; /* Above navbar */
+  animation: fadeIn 0.3s ease-out;
+}
+
+.modalContent {
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(77, 225, 193, 0.3); /* Cyan border */
+  border-radius: 20px;
+  box-shadow: 0 0 40px rgba(77, 225, 193, 0.15);
+  width: 90%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+  padding: 2rem;
+  color: #e0e0e0;
+  font-family: 'Segoe UI', Roboto, sans-serif;
+  animation: scaleUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.closeButton {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 1.5rem;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.closeButton:hover {
+  color: white;
+}
+
+/* --- Headers & Text --- */
+.title {
+  color: #4de1c1; /* Cyan */
+  text-align: center;
+  margin-bottom: 0.5rem;
+  font-size: 1.8rem;
+  text-shadow: 0 0 10px rgba(77, 225, 193, 0.4);
+}
+
+.subtitle {
+  text-align: center;
+  color: rgba(255, 255, 255, 0.7);
+  margin-bottom: 2rem;
+  font-size: 0.9rem;
+}
+
+/* --- Forms --- */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+
+.inputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.label {
+  font-size: 0.85rem;
+  color: #a259ff; /* Purple accent */
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.input {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 12px;
+  color: white;
+  font-size: 1rem;
+  outline: none;
+  transition: all 0.2s;
+}
+
+.input:focus {
+  border-color: #4de1c1;
+  box-shadow: 0 0 15px rgba(77, 225, 193, 0.2);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* --- Buttons --- */
+.primaryButton {
+  background: linear-gradient(135deg, #a259ff, #5a7cff);
+  border: none;
+  border-radius: 30px;
+  padding: 12px;
+  color: white;
+  font-weight: bold;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  margin-top: 1rem;
+}
+
+.primaryButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 20px rgba(162, 89, 255, 0.4);
+}
+
+.ghostButton {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 30px;
+  padding: 12px;
+  color: #e0e0e0;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+}
+
+.ghostButton:hover {
+  border-color: #4de1c1;
+  color: #4de1c1;
+  background: rgba(77, 225, 193, 0.05);
+}
+
+.switchMode {
+  text-align: center;
+  margin-top: 1.5rem;
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.link {
+  color: #4de1c1;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-weight: bold;
+  text-decoration: underline;
+  padding: 0;
+  margin-left: 5px;
+}
+
+/* --- Onboarding Wizard --- */
+.wizardContainer {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.progressBar {
+  display: flex;
+  gap: 5px;
+  margin-bottom: 2rem;
+}
+
+.progressStep {
+  flex: 1;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  transition: background 0.3s;
+}
+
+.progressStep.active {
+  background: #4de1c1;
+  box-shadow: 0 0 8px rgba(77, 225, 193, 0.5);
+}
+
+.cardGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.optionCard {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 1.5rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.8rem;
+}
+
+.optionCard:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.optionCard.selected {
+  border-color: #4de1c1;
+  background: rgba(77, 225, 193, 0.1);
+  box-shadow: 0 0 15px rgba(77, 225, 193, 0.2);
+}
+
+.cardIcon {
+  font-size: 2rem;
+}
+
+.cardTitle {
+  font-weight: bold;
+  color: white;
+  font-size: 1rem;
+}
+
+.cardDesc {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scaleUp {
+  from { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
