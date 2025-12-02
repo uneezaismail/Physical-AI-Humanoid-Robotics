@@ -4,55 +4,54 @@ FastEmbed embeddings service.
 Generates embeddings for text chunks using local FastEmbed models (no API required).
 """
 
-from fastembed import TextEmbedding
-from typing import List
 import asyncio
 import logging
+from typing import List
+
+from openai import OpenAI
+
+from app.config import settings
 
 logger = logging.getLogger(__name__)
 
 
 class EmbeddingService:
-    """Service for generating text embeddings using FastEmbed (local model)."""
+    """Service for generating text embeddings using the Gemini API (via OpenAI SDK)."""
 
-    def __init__(self, model_name: str = "BAAI/bge-small-en-v1.5"):
+    def __init__(self):
         """
-        Initialize FastEmbed client with local model.
-
-        Args:
-            model_name: FastEmbed model to use. Options:
-                - "BAAI/bge-small-en-v1.5" (384 dims, fast, recommended)
-                - "sentence-transformers/all-MiniLM-L6-v2" (384 dims)
-                - "BAAI/bge-base-en-v1.5" (768 dims, better quality)
+        Initialize OpenAI client for Gemini Embeddings.
+        Uses text-embedding-004 model with 768 dimensions as specified.
         """
-        logger.info(f"Initializing FastEmbed with model: {model_name}")
-        self.model = TextEmbedding(model_name=model_name)
-        self.model_name = model_name
+        self.client = OpenAI(
+            api_key=settings.gemini_api_key,
+            base_url="https://generativelanguage.googleapis.com/v1beta/openai/"
+        )
+        self.model_name = "text-embedding-004"
+        self.embedding_dim = 768  # As specified in CLAUDE.md
 
-        # Get embedding dimension from first test embedding
-        test_embedding = list(self.model.embed(["test"]))[0]
-        self.embedding_dim = len(test_embedding)
-        logger.info(f"FastEmbed initialized. Embedding dimension: {self.embedding_dim}")
+        logger.info(
+            f"Initialized Gemini Embeddings with model: {self.model_name}, "
+            f"dimension: {self.embedding_dim}"
+        )
 
     async def generate_embedding(self, text: str) -> List[float]:
         """
-        Generate embedding for a single text.
+        Generate embedding for a single text using Gemini API.
 
         Args:
             text: Input text
 
         Returns:
-            Embedding vector (384 dimensions for bge-small-en-v1.5)
+            Embedding vector (768 dimensions)
         """
         try:
-            # Run embedding generation in executor since FastEmbed is CPU-bound
-            loop = asyncio.get_event_loop()
-            embedding = await loop.run_in_executor(
-                None,
-                lambda: list(self.model.embed([text]))[0]
+            response = await asyncio.to_thread(
+                self.client.embeddings.create,
+                model=self.model_name,
+                input=text
             )
-            return embedding.tolist() if hasattr(embedding, 'tolist') else list(embedding)
-
+            return response.data[0].embedding
         except Exception as e:
             logger.error(f"Failed to generate embedding: {str(e)}")
             raise
@@ -60,12 +59,10 @@ class EmbeddingService:
     async def generate_embeddings_batch(
         self,
         texts: List[str],
-        batch_size: int = 32
+        batch_size: int = 32  # Gemini API might have its own batching/rate limits
     ) -> List[List[float]]:
         """
-        Generate embeddings for multiple texts in batches.
-
-        FastEmbed processes batches locally with no API limits.
+        Generate embeddings for multiple texts in batches using Gemini API.
 
         Args:
             texts: List of input texts
@@ -75,35 +72,22 @@ class EmbeddingService:
             List of embedding vectors
         """
         all_embeddings = []
-
         try:
-            # Process in batches for memory efficiency
-            for i in range(0, len(texts), batch_size):
-                batch = texts[i:i + batch_size]
-
-                # Run batch embedding in executor
-                loop = asyncio.get_event_loop()
-                batch_embeddings = await loop.run_in_executor(
-                    None,
-                    lambda: list(self.model.embed(batch))
-                )
-
-                # Convert numpy arrays to lists
-                batch_embeddings = [
-                    emb.tolist() if hasattr(emb, 'tolist') else list(emb)
-                    for emb in batch_embeddings
-                ]
-
-                all_embeddings.extend(batch_embeddings)
-                logger.info(f"Generated {len(batch_embeddings)} embeddings (batch {i // batch_size + 1}/{(len(texts) + batch_size - 1) // batch_size})")
-
+            # The OpenAI SDK handles internal batching or we can add it here if needed
+            # For now, making a single call to leverage potential API-side batching
+            # and to simplify the initial implementation.
+            response = await asyncio.to_thread(
+                self.client.embeddings.create,
+                model=self.model_name,
+                input=texts
+            )
+            all_embeddings = [d.embedding for d in response.data]
             logger.info(f"✅ Total embeddings generated: {len(all_embeddings)}")
             return all_embeddings
-
         except Exception as e:
             logger.error(f"Failed to generate embeddings: {str(e)}")
             raise
 
 
-# Global instance (using fast, lightweight model)
-embedding_service = EmbeddingService(model_name="BAAI/bge-small-en-v1.5")
+# Global instance
+embedding_service = EmbeddingService()

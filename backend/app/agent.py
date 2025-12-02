@@ -8,7 +8,7 @@ from typing import List, Dict, Optional, Any
 import logging
 from dataclasses import dataclass, field
 
-from .services.qdrant_client import qdrant_service
+from .services.qdrant_client import qdrant_client
 from .services.embeddings import embedding_service
 
 logger = logging.getLogger(__name__)
@@ -33,7 +33,7 @@ async def search_textbook(ctx: RunContextWrapper[AgentContext], query: str) -> s
     embedding = await embedding_service.generate_embedding(query)
     
     # Search Qdrant
-    results = await qdrant_service.search_similar(embedding, limit=5)
+    results = await qdrant_client.search_points(embedding, limit=5)
     
     if not results:
         return "No relevant information found in the textbook."

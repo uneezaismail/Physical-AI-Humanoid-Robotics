@@ -16,7 +16,7 @@
 ## Path Conventions
 
 **Web app structure** (backend only - per plan.md):
-- Backend: `backend/app/`, `backend/tests/`
+- Backend: `backend/app/`, `backend/tests/`, `backend/scripts/`
 - Frontend: `frontend/docs/` (existing Docusaurus - read-only for ingestion)
 
 ---
@@ -25,9 +25,9 @@
 
 **Purpose**: Project initialization and basic structure
 
-- [X] T001 Create backend project structure per plan.md: backend/app/, backend/app/rag/, backend/app/api/, backend/app/db/, backend/tests/
+- [X] T001 Create backend project structure per plan.md: backend/app/, backend/app/services/, backend/app/api/, backend/app/middleware/, backend/tests/
 - [X] T002 Initialize Python 3.11+ project with pyproject.toml and requirements.txt (dependencies from research.md)
-- [X] T003 [P] Configure development tools: ruff, black, mypy, pytest configuration files
+- [X] T003 [P] Configure development tools: pylint, black, mypy, pytest configuration files
 - [X] T004 [P] Create .env.example file in backend/ with required environment variables (GEMINI_API_KEY, QDRANT_URL, QDRANT_API_KEY)
 - [X] T005 [P] Create backend/README.md with quickstart instructions from quickstart.md
 - [X] T006 Create backend/app/__init__.py and backend/app/config.py for environment variable management using python-dotenv
@@ -40,15 +40,15 @@
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [X] T007 Implement Qdrant client connection in backend/app/db/qdrant_client.py (create collection physical-ai-textbook-v1, 768 dimensions, cosine similarity)
-- [X] T008 [P] Implement embedding generation using Gemini API in backend/app/rag/embeddings.py (text-embedding-004 model via OpenAI SDK)
-- [X] T009 [P] Create Pydantic models for all entities in backend/app/api/models.py (Chunk, Query, SearchResult, AgentResponse, QueryRequest, QueryResponse, IngestResult per data-model.md)
-- [X] T010 [P] Implement content hash generation utility in backend/app/rag/chunking.py (SHA-256 for idempotency)
-- [X] T011 Implement MDX file parsing in backend/app/rag/chunking.py using python-frontmatter (extract metadata and content)
-- [X] T012 Implement semantic chunking logic in backend/app/rag/chunking.py using tiktoken (500-800 tokens, 100-token overlap, code-block preservation)
+- [X] T007 Implement Qdrant client connection in backend/app/services/qdrant_client.py (create collection physical-ai-textbook-v1, 768 dimensions, cosine similarity)
+- [X] T008 [P] Implement embedding generation using Gemini API in backend/app/services/embeddings.py (text-embedding-004 model via OpenAI SDK)
+- [X] T009 [P] Define Pydantic models in backend/app/api/chat.py (ChatRequest, ChatResponse, Source, etc.)
+- [X] T010 [P] Implement content hash generation utility in backend/scripts/ingest_docs.py (SHA-256 for idempotency)
+- [X] T011 Implement MDX file parsing in backend/scripts/ingest_docs.py using python-frontmatter (extract metadata and content)
+- [X] T012 Implement semantic chunking logic in backend/scripts/ingest_docs.py using tiktoken (500-800 tokens, 100-token overlap, code-block preservation)
 - [X] T013 Create FastAPI application entry point in backend/app/main.py with CORS configuration and dependency injection setup
 - [X] T014 [P] Implement structured logging configuration in backend/app/config.py (JSON format, log levels)
-- [X] T015 [P] Implement error handling utilities in backend/app/api/routes.py (HTTPException with user-friendly messages, retry logic with exponential backoff)
+- [X] T015 [P] Implement error handling utilities in backend/app/middleware/error_handler.py (HTTPException with user-friendly messages)
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
 
@@ -64,19 +64,19 @@
 
 > **NOTE: Write these tests FIRST, ensure they FAIL before implementation**
 
-- [X] T016 [P] [US1] Create test_rag_retrieval.py in backend/tests/ with test for query "What is embodied intelligence?" (expected: retrieves relevant chunks from Chapter 1)
-- [X] T017 [P] [US1] Create test_embeddings.py in backend/tests/ with test to verify embedding generation produces 768-dim vectors
+- [X] T016 [P] [US1] Create backend/tests/unit/test_chat_api.py with test for query "What is embodied intelligence?" (expected: retrieves relevant chunks from Chapter 1)
+- [X] T017 [P] [US1] Create backend/tests/unit/test_docs.py to verify API documentation
 
 ### Implementation for User Story 1
 
-- [X] T018 [US1] Implement Qdrant search function in backend/app/rag/retrieval.py (top 5 semantic search using cosine similarity, return SearchResult objects)
-- [X] T019 [US1] Implement context building from search results in backend/app/rag/retrieval.py (construct payload with chunk text, chapter, section, filename)
-- [X] T020 [US1] Implement OpenAI Agents integration in backend/app/rag/agents.py using Gemini API via OpenAI SDK (pass context + query, generate answer)
-- [X] T021 [US1] Implement `POST /api/query` endpoint in backend/app/api/routes.py (accept QueryRequest, embed query, search Qdrant, call agent, return QueryResponse)
-- [X] T022 [US1] Add input validation for query endpoint in backend/app/api/routes.py (max 500 words for query, max 200 words for selected_text)
-- [X] T023 [US1] Add error handling for Qdrant unavailable and Gemini API failures in backend/app/api/routes.py (graceful degradation per edge cases)
-- [X] T024 [US1] Implement health check endpoint `GET /health` in backend/app/api/routes.py (verify Qdrant and Gemini API connectivity)
-- [X] T025 [US1] Add logging for query processing in backend/app/api/routes.py (sanitized query text, response time, error tracking)
+- [X] T018 [US1] Implement Qdrant search function in backend/app/services/qdrant_client.py (top 5 semantic search using cosine similarity, return SearchResult objects)
+- [X] T019 [US1] Implement context building from search results in backend/app/services/agent_service.py (construct payload with chunk text, chapter, section, filename)
+- [X] T020 [US1] Implement OpenAI Agents integration in backend/app/services/agent_service.py using Gemini API via OpenAI SDK (pass context + query, generate answer)
+- [X] T021 [US1] Implement `POST /api/chat/` endpoint in backend/app/api/chat.py (accept ChatRequest, embed query, search Qdrant, call agent, return ChatResponse)
+- [X] T022 [US1] Add input validation for query endpoint in backend/app/api/chat.py (max 500 words for query, max 200 words for selected_text)
+- [X] T023 [US1] Add error handling for Qdrant unavailable and Gemini API failures in backend/app/api/chat.py (graceful degradation per edge cases)
+- [X] T024 [US1] Implement health check endpoint `GET /api/health` in backend/app/api/health.py (verify Qdrant and Gemini API connectivity)
+- [X] T025 [US1] Add logging for query processing in backend/app/api/chat.py (sanitized query text, response time, error tracking)
 
 **Checkpoint**: At this point, User Story 1 should be fully functional - can query textbook content and receive answers (assuming content is ingested)
 
@@ -90,19 +90,19 @@
 
 ### Tests for User Story 2
 
-- [X] T026 [P] [US2] Create test_chunking.py in backend/tests/ with tests for semantic boundaries, code block preservation, token counting accuracy
-- [X] T027 [P] [US2] Create test_ingest_cli.py in backend/tests/ with test for CLI execution (mock file system, verify exit codes, output format per IngestResult model)
+- [X] T026 [P] [US2] Create unit tests for chunking in backend/tests/unit/ (tests for semantic boundaries, code block preservation, token counting accuracy)
+- [X] T027 [P] [US2] Create unit tests for ingestion in backend/tests/unit/ (test for CLI execution)
 
 ### Implementation for User Story 2
 
-- [X] T028 [US2] Implement recursive MDX file scanner in backend/app/ingest.py (scan frontend/docs/, filter .mdx and .md files, extract chapter/section from path)
-- [X] T029 [US2] Implement batch embedding generation in backend/app/rag/embeddings.py (process multiple chunks efficiently, handle rate limits)
-- [X] T030 [US2] Implement Qdrant upsert logic in backend/app/db/qdrant_client.py (use content hash as point ID for idempotency, store with payload metadata)
-- [X] T031 [US2] Implement CLI ingestion script main function in backend/app/ingest.py (orchestrate: scan → parse → chunk → embed → store, handle errors gracefully)
-- [X] T032 [US2] Add progress logging to CLI script in backend/app/ingest.py (stdout output showing files processed, chunks created per file)
-- [X] T033 [US2] Add error handling for CLI script in backend/app/ingest.py (catch malformed MDX, API failures, DB errors; continue processing; log errors; set non-zero exit code)
-- [X] T034 [US2] Implement incremental update detection in backend/app/ingest.py (compare content hashes, only re-embed changed files)
-- [X] T035 [US2] Add CLI script execution via `python -m app.ingest` in backend/app/__main__.py
+- [X] T028 [US2] Implement recursive MDX file scanner in backend/scripts/ingest_docs.py (scan frontend/docs/, filter .mdx and .md files, extract chapter/section from path)
+- [X] T029 [US2] Implement batch embedding generation in backend/app/services/embeddings.py (process multiple chunks efficiently, handle rate limits)
+- [X] T030 [US2] Implement Qdrant upsert logic in backend/app/services/qdrant_client.py (use content hash as point ID for idempotency, store with payload metadata)
+- [X] T031 [US2] Implement CLI ingestion script main function in backend/scripts/ingest_docs.py (orchestrate: scan → parse → chunk → embed → store, handle errors gracefully)
+- [X] T032 [US2] Add progress logging to CLI script in backend/scripts/ingest_docs.py (stdout output showing files processed, chunks created per file)
+- [X] T033 [US2] Add error handling for CLI script in backend/scripts/ingest_docs.py (catch malformed MDX, API failures, DB errors; continue processing; log errors; set non-zero exit code)
+- [X] T034 [US2] Implement incremental update detection in backend/scripts/ingest_docs.py (compare content hashes, only re-embed changed files)
+- [X] T035 [US2] Add CLI script execution via `python backend/scripts/ingest_docs.py`
 
 **Checkpoint**: At this point, User Stories 1 AND 2 should both work independently - can ingest content and query it
 
@@ -116,11 +116,11 @@
 
 ### Implementation for User Story 3
 
-- [X] T036 [US3] Extend query embedding logic in backend/app/rag/embeddings.py to handle optional selected_text (combine query + selected_text for embedding if provided)
-- [X] T037 [US3] Update Qdrant search in backend/app/rag/retrieval.py to use combined embedding when selected_text is present
-- [X] T038 [US3] Update `POST /api/query` endpoint handler in backend/app/api/routes.py to pass selected_text to embedding and retrieval functions
-- [X] T039 [US3] Add validation for selected_text in backend/app/api/routes.py (max 200 words per FR-015)
-- [X] T040 [US3] Update test_rag_retrieval.py in backend/tests/ to include test case for contextual query with selected_text
+- [X] T036 [US3] Extend query embedding logic in backend/app/services/embeddings.py to handle optional selected_text (combine query + selected_text for embedding if provided)
+- [X] T037 [US3] Update Qdrant search in backend/app/services/qdrant_client.py to use combined embedding when selected_text is present
+- [X] T038 [US3] Update `POST /api/chat/` endpoint handler in backend/app/api/chat.py to pass selected_text to embedding and retrieval functions
+- [X] T039 [US3] Add validation for selected_text in backend/app/api/chat.py (max 200 words per FR-015)
+- [X] T040 [US3] Update backend/tests/unit/test_chat_api.py to include test case for contextual query with selected_text
 
 **Checkpoint**: All user stories should now be independently functional - full RAG system with contextual queries
 
@@ -132,13 +132,13 @@
 
 - [ ] T041 [P] Add comprehensive docstrings (Google style) to all public functions in backend/app/ modules
 - [ ] T042 [P] Run mypy type checking and fix any type errors in backend/app/
-- [ ] T043 [P] Run ruff linting and fix all issues in backend/app/
+- [ ] T043 [P] Run pylint linting and fix all issues in backend/app/
 - [ ] T044 [P] Run black formatting on all Python files in backend/
 - [ ] T045 Optimize Qdrant search performance if needed (add payload indexing for chapter/section fields per research.md)
-- [ ] T046 Add rate limiting for Gemini API calls in backend/app/rag/embeddings.py (respect 60 req/min limit per assumptions)
+- [ ] T046 Add rate limiting for Gemini API calls in backend/app/services/embeddings.py (respect 60 req/min limit per assumptions)
 - [ ] T047 Validate quickstart.md instructions by following setup steps from scratch
 - [ ] T048 Update OpenAPI spec in specs/002-rag-chatbot-backend/contracts/api-openapi.yaml if any endpoint changes occurred during implementation
-- [ ] T049 [P] Add unit tests for utility functions (content hash generation, token counting) in backend/tests/test_utils.py
+- [ ] T049 [P] Add unit tests for utility functions (content hash generation, token counting) in backend/tests/unit/
 - [ ] T050 Run RAG accuracy validation with 50 test queries (target: 90% correct answers per SC-002)
 
 ---

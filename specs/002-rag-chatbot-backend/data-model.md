@@ -170,7 +170,7 @@ class SearchResult(BaseModel):
 |-------|------|----------|------------|-------------|
 | `answer` | `str` | Yes | Non-empty string | Generated text response |
 | `sources` | `list[Source]` | Yes | 1-5 elements | Array of source citations |
-| `model_used` | `str` | Yes | Non-empty string | Model identifier (e.g., "gemini-1.5-pro") |
+| `model_used` | `str` | Yes | Non-empty string | Model identifier (e.g., "gemini-2.0-flash") |
 | `latency` | `int` | Yes | >= 0 | Time to generate answer (milliseconds) |
 
 **Nested Entity: Source**
@@ -215,61 +215,89 @@ class AgentResponse(BaseModel):
 
 ## API Request/Response Models
 
-### QueryRequest (API Input)
+### ChatRequest (API Input)
 
-**Purpose**: Request payload for `POST /api/query` endpoint.
+**Purpose**: Request payload for `POST /api/chat/` and `POST /api/chat/stream` endpoints.
 
-**Source**: FR-015
+**Source**: FR-015 (`spec.md`)
 
 **Attributes**:
 
 | Field | Type | Required | Validation | Description |
 |-------|------|----------|------------|-------------|
 | `query` | `str` | Yes | Max 500 words | User's question |
-| `selected_text` | `str | None` | No | Max 200 words | Optional highlighted text |
+| `top_k` | `int | None` | No | 1 <= `top_k` <= 10 | Number of sources to retrieve |
+| `selected_text` | `str | None` | No | Max 2000 characters | Optional user-selected text from book |
 
 **Pydantic Model Outline**:
 ```python
-class QueryRequest(BaseModel):
-    query: str = Field(..., min_length=1)
-    selected_text: str | None = Field(default=None)
+from pydantic import BaseModel, Field
 
-    @field_validator('query')
-    def validate_query_length(cls, v):
-        word_count = len(v.split())
-        if word_count > 500:
-            raise ValueError(f'Query exceeds 500 words (has {word_count})')
-        return v
-
-    @field_validator('selected_text')
-    def validate_selected_text_length(cls, v):
-        if v is not None:
-            word_count = len(v.split())
-            if word_count > 200:
-                raise ValueError(f'Selected text exceeds 200 words (has {word_count})')
-        return v
+class ChatRequest(BaseModel):
+    query: str = Field(..., min_length=1, max_length=500, description="User question")
+    top_k: int | None = Field(5, ge=1, le=10, description="Number of sources to retrieve")
+    selected_text: str | None = Field(
+        None, min_length=0, max_length=2000, description="Optional user-selected text from book"
+    )
 ```
 
 ---
 
-### QueryResponse (API Output)
+### TextSelectionRequest (API Input)
 
-**Purpose**: Response payload for `POST /api/query` endpoint.
+**Purpose**: Request payload for `POST /api/chat/text-selection` endpoint.
 
-**Source**: FR-015
+**Source**: FR-015 (`spec.md`)
+
+**Attributes**:
+
+| Field | Type | Required | Validation | Description |
+|-------|------|----------|------------|-------------|
+| `selected_text` | `str` | Yes | Min 10, Max 2000 characters | User-selected text from book |
+| `query` | `str` | Yes | Min 1, Max 500 characters | User question related to selected text |
+
+**Pydantic Model Outline**:
+```python
+from pydantic import BaseModel, Field
+
+class TextSelectionRequest(BaseModel):
+    selected_text: str = Field(
+        ..., min_length=10, max_length=2000, description="User-selected text from book"
+    )
+    query: str = Field(..., min_length=1, max_length=500, description="User question")
+```
+
+---
+
+### ChatResponse (API Output)
+
+**Purpose**: Response payload for `POST /api/chat/` and `POST /api/chat/text-selection` endpoints.
+
+**Source**: FR-015 (`spec.md`)
 
 **Attributes**:
 
 | Field | Type | Required | Validation | Description |
 |-------|------|----------|------------|-------------|
 | `answer` | `str` | Yes | Non-empty | Generated answer text |
-| `sources` | `list[Source]` | Yes | 1-5 elements | Source citations |
+| `sources` | `list[Source]` | Yes | 0-5 elements | Source citations |
+| `has_answer` | `bool` | Yes | True/False | Whether an answer was found in textbook |
+| `confidence` | `str` | Yes | 'high', 'medium', 'low' | Confidence level of the answer |
+| `num_sources` | `int` | Yes | >= 0 | Number of sources used |
+| `query_processed` | `str` | Yes | Non-empty | Enhanced query for debugging |
 
 **Pydantic Model Outline**:
 ```python
-class QueryResponse(BaseModel):
-    answer: str = Field(..., min_length=1)
-    sources: list[Source] = Field(..., min_length=1, max_length=5)
+from pydantic import BaseModel, Field
+from typing import List
+
+class ChatResponse(BaseModel):
+    answer: str
+    sources: List[Source]
+    has_answer: bool
+    confidence: str
+    num_sources: int
+    query_processed: str
 ```
 
 ---
@@ -331,19 +359,23 @@ class IngestResult(BaseModel):
   "id": "<sha256_hash>",
   "vector": [0.1, 0.2, ..., 0.768],  // 768 floats
   "payload": {
-    "text": "Chunk content...",
-    "chapter": "Chapter 1: Embodied Intelligence",
-    "section": "01-digital-vs-physical-ai",
-    "filename": "01-digital-vs-physical-ai.mdx",
-    "chunk_index": 0,
-    "content_hash": "<sha256_hash>"
+    "content": "Original chunk text...",
+    "header": "Heading or context from which the chunk was extracted",
+    "source_file": "path/to/frontend/docs/chapter/section.mdx",
+    "frontmatter": {
+      "id": "chapter-id",
+      "title": "Chapter Title",
+      "description": "Chapter Description",
+      "sidebar_position": 1,
+      "keywords": ["keyword1", "keyword2"]
+    }
   }
 }
 ```
 
 **Indexes**:
-- Payload fields `chapter`, `section`, `filename` are indexed for filtered search (future enhancement)
-- Vector index is HNSW by default
+- Payload fields `header`, `source_file` are indexed for filtered search (future enhancement).
+- Vector index is HNSW by default.
 
 ---
 
@@ -366,18 +398,18 @@ class IngestResult(BaseModel):
          │ retrieved by
          │
          ▼
-┌─────────────────┐       produces       ┌──────────────────┐
-│  SearchResult   │<─────────────────────│  Query           │
-│  (Pydantic)     │                      │  (API Request)   │
-└────────┬────────┘                       └──────────────────┘
+┌─────────────────┐       produces       ┌───────────────────┐
+│  SearchResult   │<─────────────────────│  ChatRequest      │
+│  (Pydantic)     │                      │  (API Request)    │
+└────────┬────────┘                       └───────────────────┘
          │
          │ passed to OpenAI Agents
          │
          ▼
-┌─────────────────┐       returns        ┌──────────────────┐
-│  AgentResponse  │──────────────────────>│  QueryResponse   │
-│  (Pydantic)     │                       │  (API Output)    │
-└─────────────────┘                       └──────────────────┘
+┌─────────────────┐       returns        ┌───────────────────┐
+│  AgentResponse  │──────────────────────>│  ChatResponse     │
+│  (Pydantic)     │                       │  (API Output)     │
+└─────────────────┘                       └───────────────────┘
 ```
 
 ---

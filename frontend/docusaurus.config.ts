@@ -7,7 +7,7 @@ import type * as Preset from "@docusaurus/preset-classic";
 const config: Config = {
   title: "Physical AI & Humanoid Robotics",
   tagline: "Interactive Learning for ROS 2 and Robotics",
-  favicon: "img/home.jpg",
+  favicon: "img/home.png",
 
   // Set the production url of your site here
   url: "https://uneezaismail.github.io",
@@ -88,11 +88,6 @@ const config: Config = {
       },
     ],
 
-    // Color mode configuration
-    colorMode: {
-      respectPrefersColorScheme: true,
-    },
-
     // Navbar configuration
     navbar: {
       title: "Physical AI & Humanoid Robotics ",
@@ -107,6 +102,20 @@ const config: Config = {
           position: "left",
           label: "Textbook",
           "aria-label": "Navigate to textbook chapters",
+        },
+        {
+          type: "html",
+          position: "right",
+          value: `
+            <button class="navAuthButton navLogin" onclick="window.openLoginModal()">Log In</button>
+          `,
+        },
+        {
+          type: "html",
+          position: "right",
+          value: `
+            <button class="navAuthButton navSignup" onclick="window.openSignupModal()">Sign Up</button>
+          `,
         },
         {
           href: "https://github.com/uneezaismail/physical-ai-and-humanoid-robotics",
@@ -178,11 +187,21 @@ const config: Config = {
 
     // Mermaid configuration
     mermaid: {
-      theme: { light: "neutral", dark: "forest" },
+      theme: { light: "neutral", dark: "forest" }, // Set both light and dark to 'dark' for consistency in Cyber-Physical theme
       options: {
         maxTextSize: 50000,
         fontFamily: "system-ui",
       },
+    },
+
+    // Custom CSS properties for theming
+    // These can be accessed via CSS variables in custom.css
+    // For example: var(--ifm-color-primary)
+    // This ensures consistency with Docusaurus's theming system
+    colorMode: {
+      defaultMode: "dark",
+      disableSwitch: false,
+      respectPrefersColorScheme: true,
     },
   } satisfies Preset.ThemeConfig,
 };

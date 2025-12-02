@@ -11,7 +11,7 @@ Build a Retrieval-Augmented Generation (RAG) system that converts Physical AI te
 
 1. **CLI Ingestion Script**: Recursively scans `frontend/docs/` for MDX files, chunks content at semantic boundaries (500-800 tokens with 100-token overlap), generates 768-dimensional embeddings using `text-embedding-004`, and stores them in Qdrant with metadata (chapter, section, filename, chunk_index). The script is idempotent and handles multiple chapters without code changes.
 
-2. **FastAPI Query Endpoint**: Accepts user queries (max 500 words) and optional selected text, embeds the query, searches Qdrant for top 5 semantically similar chunks, passes context to OpenAI Agents for answer generation, and returns responses with source citations.
+2. **FastAPI Query Endpoints**: Exposes `POST /api/chat/` for standard chat, `POST /api/chat/stream` for streaming responses, `POST /api/chat/text-selection` for contextual queries, and `GET /api/health` for health checks. The endpoints embed the user query, search Qdrant for top 5 semantically similar chunks, pass context to OpenAI Agents for answer generation, and return responses with source citations.
 
 **Technical Approach**: Python 3.11+ async-first design using Gemini API (via OpenAI SDK wrapper), Qdrant Cloud for vector storage, FastAPI for HTTP endpoints, Pydantic for validation, and pytest for testing. Content hashing (SHA-256) ensures idempotent ingestion.
 
@@ -25,7 +25,8 @@ Build a Retrieval-Augmented Generation (RAG) system that converts Physical AI te
 - `qdrant-client` - Vector database client for Qdrant Cloud
 - `python-dotenv` - Environment variable management
 - `openai` - SDK for Gemini API access (OpenAI-compatible wrapper)
-- Development: `ruff`, `black`, `mypy`, `pytest`
+- `sse-starlette` - Server-Sent Events for streaming responses
+- Development: `pylint`, `black`, `mypy`, `pytest`
 
 **Storage**:
 - Qdrant Cloud - Vector database (768-dimensional embeddings, cosine similarity search)
@@ -34,7 +35,7 @@ Build a Retrieval-Augmented Generation (RAG) system that converts Physical AI te
 
 **Testing**:
 - `pytest` - Unit and integration tests
-- Test files: `test_embeddings.py`, `test_rag_retrieval.py`, `test_chunking.py`, `test_ingest_cli.py`
+- Test files: `test_embeddings.py`, `test_chat_api.py`, `test_chunking.py`, `test_ingest_cli.py`
 - Manual QA: 50 test queries for RAG accuracy validation (target: 90% correct answers)
 
 **Target Platform**:
@@ -90,7 +91,7 @@ Build a Retrieval-Augmented Generation (RAG) system that converts Physical AI te
 - Async-first design: All I/O operations (Qdrant, Gemini API, file reads) use `async/await`
 - Pydantic models for all input/output validation (FR-017)
 - Docstrings (Google style) for all public functions
-- Black formatting (line length 88) + Ruff linting enforced
+- Black formatting (line length 88) + Pylint linting enforced
 
 ### Principle V: Security & Privacy by Design ✅ PASS
 - API keys in environment variables only: `GEMINI_API_KEY`, `QDRANT_URL`, `QDRANT_API_KEY` (FR-020, FR-021)
@@ -159,26 +160,33 @@ backend/
 │   ├── __init__.py
 │   ├── main.py                    # FastAPI application entry point
 │   ├── config.py                  # Environment variables and settings
-│   ├── ingest.py                  # CLI ingestion script (python -m app.ingest)
-│   ├── rag/
-│   │   ├── __init__.py
-│   │   ├── chunking.py            # MDX content chunking logic
-│   │   ├── embeddings.py          # Gemini API embedding generation
-│   │   ├── retrieval.py           # Qdrant search and context building
-│   │   └── agents.py              # OpenAI Agents integration
+│   ├── agent.py                   # Agent definition using openai-agents SDK
 │   ├── api/
 │   │   ├── __init__.py
-│   │   ├── routes.py              # FastAPI route definitions
-│   │   └── models.py              # Pydantic request/response models
-│   └── db/
+│   │   ├── chat.py                # Chat API endpoint
+│   │   └── health.py              # Health check API endpoint
+│   ├── middleware/                # Middleware definitions
+│   │   ├── __init__.py
+│   │   ├── cors.py
+│   │   ├── error_handler.py
+│   │   └── rate_limit.py
+│   ├── models/                    # Pydantic models (if any)
+│   │   └── __init__.py
+│   └── services/                  # Business logic and external service integrations
 │       ├── __init__.py
-│       └── qdrant_client.py       # Qdrant connection and operations
+│       ├── agent_service.py       # Orchestrates the RAG chatbot agent
+│       ├── embeddings.py          # Gemini API embedding generation
+│       ├── qdrant_client.py       # Qdrant connection and operations
+│       └── query_processor.py     # Query preprocessing and enhancement
+├── scripts/
+│   ├── ingest_docs.py             # CLI ingestion script
+│   └── verify_rag_flow.py         # RAG flow verification script
 ├── tests/
 │   ├── __init__.py
-│   ├── test_embeddings.py         # Unit tests for embedding generation
-│   ├── test_rag_retrieval.py      # Integration tests for RAG pipeline
-│   ├── test_chunking.py           # Unit tests for content chunking
-│   └── test_ingest_cli.py         # CLI script execution tests
+│   ├── unit/
+│   │   ├── __init__.py
+│   │   ├── test_chat_api.py       # Unit tests for chat API endpoints
+│   │   └── test_docs.py           # Unit tests for docs and health endpoints
 ├── requirements.txt               # Python dependencies (uv managed)
 ├── pyproject.toml                 # Python project configuration
 ├── .env.example                   # Environment variable template
@@ -222,6 +230,7 @@ frontend/                          # Existing Docusaurus textbook (not modified 
 **Additional Dependencies Added**:
 - `python-frontmatter` - MDX metadata parsing
 - `tiktoken` - Token counting for chunking
+- `sse-starlette` - Server-Sent Events for streaming responses
 
 **Status**: ✅ All NEEDS CLARIFICATION items resolved
 
@@ -241,11 +250,13 @@ Query → SearchResult → AgentResponse → QueryResponse
 ```
 
 **API Endpoints Defined**:
-- `POST /api/query` - Submit query and receive answer with citations
-- `GET /health` - Health check for service dependencies
+- `POST /api/chat/` - Standard chat retrieval
+- `POST /api/chat/stream` - Streaming chat retrieval
+- `POST /api/chat/text-selection` - Contextual query based on selected text
+- `GET /api/health` - Health check for service dependencies
 
 **CLI Commands Defined**:
-- `python -m app.ingest` - Run ingestion script to process MDX files
+- `python backend/scripts/ingest_docs.py` - Run ingestion script to process MDX files
 
 **Status**: ✅ Design artifacts complete
 

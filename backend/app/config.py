@@ -28,6 +28,7 @@ class Settings(BaseSettings):
 
     # Gemini Configuration
     gemini_api_key: str
+    gemini_base_url: str = "https://generativelanguage.googleapis.com/v1beta/openai/"
 
     # Application Configuration
     environment: str = "development"

@@ -2,113 +2,132 @@
  * Styles for FloatingChatButton
  */
 
+/* The Main Trigger Button */
 .floatingButton {
   position: fixed;
   bottom: 2rem;
   right: 2rem;
-  width: 56px; /* Slightly smaller button */
-  height: 56px;
+  width: 72px; /* Large size per reference */
+  height: 72px;
   border-radius: 50%;
-  background: #C6613F; /* User requested color */
-  color: white;
-  border: none;
+  background: rgba(15, 23, 42, 0.9); /* Dark background */
+  color: #4de1c1; /* Cyan Icon */
+  border: 2px solid #4de1c1; /* Glowing Border */
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 0 20px rgba(77, 225, 193, 0.3), inset 0 0 10px rgba(77, 225, 193, 0.1);
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.3s ease;
-  z-index: 1000; /* High z-index */
+  z-index: 9999;
+  backdrop-filter: blur(4px);
 }
 
 .floatingButton:hover {
-  transform: scale(1.05);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
-  background: #b35637;
+  transform: scale(1.1) rotate(5deg);
+  box-shadow: 0 0 30px rgba(77, 225, 193, 0.6);
+  background: rgba(15, 23, 42, 1);
 }
 
 .floatingButton:active {
   transform: scale(0.95);
 }
 
+/* The Chat Window */
 .floatingChatWindow {
   position: fixed;
-  bottom: 5.5rem; /* Above the button location roughly, or replace button */
+  bottom: 6.5rem;
   right: 2rem;
-  width: 350px; /* Reduced width */
-  height: 500px; /* Reduced height */
-  background: #ffffff;
-  border-radius: 12px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  width: 380px;
+  height: 550px;
+  background: transparent; /* Background handled by ChatWidget container */
+  border-radius: 20px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
   display: flex;
   flex-direction: column;
   z-index: 1000;
-  animation: slideUp 0.3s ease-out;
+  animation: popUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   overflow: hidden;
+  border: 1px solid rgba(77, 225, 193, 0.3); /* Subtle teal border */
 }
 
-@keyframes slideUp {
+@keyframes popUp {
   from {
-    transform: translateY(20px);
+    transform: translateY(20px) scale(0.95);
     opacity: 0;
   }
   to {
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
     opacity: 1;
   }
 }
 
+/* Header */
 .chatHeader {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 16px;
-  background: #C6613F; /* User requested color */
+  padding: 16px 20px;
+  background: rgba(15, 23, 42, 0.95);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   color: white;
 }
 
-.chatHeader h3 {
+.headerTitle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.headerTitle h3 {
   margin: 0;
   font-size: 1rem;
-  font-weight: bold;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.assistantIcon {
+  width: 24px;
+  height: 24px;
+  color: #C6613F; /* Orange accent for the header icon per original design intent, or teal */
+  /* Reference shows a white head with orange ring/thought */
 }
 
 .closeButton {
   background: transparent;
   border: none;
-  color: white;
-  font-size: 1.2rem;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 1.5rem;
   cursor: pointer;
   padding: 0;
-  width: 24px;
-  height: 24px;
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 4px;
-  transition: background 0.2s;
+  border-radius: 50%;
+  transition: all 0.2s;
 }
 
 .closeButton:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
 }
 
 .chatContent {
   flex: 1;
   overflow: hidden;
-  background: #ffffff;
-  display: flex;
-  flex-direction: column;
+  /* ChatWidget takes over background */
 }
 
 /* Mobile responsiveness */
-@media (max-width: 480px) {
+@media (max-width: 996px) {
   .floatingChatWindow {
     width: 100%;
     height: 100%;
     bottom: 0;
     right: 0;
     border-radius: 0;
+    border: none;
   }
 
   .floatingButton {

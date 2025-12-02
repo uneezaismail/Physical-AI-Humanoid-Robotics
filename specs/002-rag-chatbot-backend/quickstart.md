@@ -61,9 +61,11 @@ Expected dependencies:
 - `pydantic` - Data validation
 - `qdrant-client` - Vector database client
 - `python-dotenv` - Environment variables
-- `python-frontmatter` - MDX parsing
-- `tiktoken` - Token counting
-- Development: `ruff`, `black`, `mypy`, `pytest`
+- `openai` - SDK for Gemini API access (OpenAI-compatible wrapper)
+- `sse-starlette` - Server-Sent Events for streaming responses
+- `python-frontmatter` - MDX parsing (for ingestion script)
+- `tiktoken` - Token counting (for ingestion script)
+- Development: `pylint`, `black`, `mypy`, `pytest`
 
 ## Usage
 
@@ -73,7 +75,7 @@ Run the ingestion script to process MDX files and store embeddings in Qdrant:
 
 ```bash
 # From backend/ directory
-python -m app.ingest
+python backend/scripts/ingest_docs.py
 ```
 
 **Expected Output**:
@@ -118,32 +120,34 @@ INFO:     Application startup complete.
 #### Option A: Using cURL
 
 ```bash
-# Basic query
-curl -X POST http://localhost:8000/api/query \
+# Basic chat query
+curl -X POST http://localhost:8000/api/chat/ \
   -H "Content-Type: application/json" \
   -d '{
     "query": "What is embodied intelligence?"
   }'
 
+# Streaming chat query (example for SSE client, not simple curl)
+# For actual streaming, use an SSE-compatible client in Python or browser JavaScript.
+
 # Contextual query with selected text
-curl -X POST http://localhost:8000/api/query \
+curl -X POST http://localhost:8000/api/chat/text-selection \
   -H "Content-Type: application/json" \
   -d '{
-    "query": "How does this hardware work?",
-    "selected_text": "NVIDIA Jetson Orin Nano"
+    "selected_text": "NVIDIA Jetson Orin Nano",
+    "query": "How does this hardware work?"
   }'
 ```
 
 #### Option B: Using FastAPI Swagger UI
 
 1. Navigate to http://localhost:8000/docs
-2. Expand the `POST /api/query` endpoint
+2. Expand the `POST /api/chat/` endpoint
 3. Click "Try it out"
 4. Enter query in the request body:
    ```json
    {
-     "query": "What is the difference between ROS 1 and ROS 2?",
-     "selected_text": null
+     "query": "What is the difference between ROS 1 and ROS 2?"
    }
    ```
 5. Click "Execute"
@@ -155,10 +159,9 @@ curl -X POST http://localhost:8000/api/query \
 import requests
 
 response = requests.post(
-    "http://localhost:8000/api/query",
+    "http://localhost:8000/api/chat/",
     json={
-        "query": "Explain VSLAM in ROS 2",
-        "selected_text": None
+        "query": "Explain VSLAM in ROS 2"
     }
 )
 
@@ -166,7 +169,7 @@ result = response.json()
 print("Answer:", result["answer"])
 print("\nSources:")
 for source in result["sources"]:
-    print(f"  - {source['chapter']} / {source['section']} (score: {source['score']:.2f})")
+    print(f"  - {source['title']} / {source['section']} (score: {source['score']:.2f})")
 ```
 
 **Expected Response**:
@@ -175,18 +178,24 @@ for source in result["sources"]:
   "answer": "Embodied intelligence refers to AI systems that interact with the physical world through sensors and actuators...",
   "sources": [
     {
-      "chapter": "Chapter 1: Embodied Intelligence",
+      "excerpt_num": 1,
+      "title": "Chapter 1: Embodied Intelligence",
       "section": "01-digital-vs-physical-ai",
-      "filename": "01-digital-vs-physical-ai.mdx",
+      "file_path": "01-part-1-foundations-lab/01-chapter-1-embodied-ai.mdx",
       "score": 0.92
     },
     {
-      "chapter": "Chapter 1: Embodied Intelligence",
+      "excerpt_num": 2,
+      "title": "Chapter 1: Embodied Intelligence",
       "section": "02-sensorimotor-loop",
-      "filename": "02-sensorimotor-loop.mdx",
+      "file_path": "01-part-1-foundations-lab/01-chapter-1-embodied-ai.mdx",
       "score": 0.87
     }
-  ]
+  ],
+  "has_answer": true,
+  "confidence": "high",
+  "num_sources": 2,
+  "query_processed": "what is embodied intelligence"
 }
 ```
 
@@ -196,21 +205,14 @@ for source in result["sources"]:
 
 ```bash
 # From backend/ directory
-pytest tests/test_embeddings.py -v
-pytest tests/test_chunking.py -v
+pytest backend/tests/unit/test_chat_api.py -v
+pytest backend/tests/unit/test_docs.py -v
 ```
 
-### Integration Tests
+### All Tests (including unit and ingestion script tests - if created)
 
 ```bash
-pytest tests/test_rag_retrieval.py -v
-pytest tests/test_ingest_cli.py -v
-```
-
-### All Tests
-
-```bash
-pytest tests/ -v
+pytest backend/tests/ -v
 ```
 
 **Expected Output**:
@@ -236,7 +238,7 @@ mypy app/
 ### Linting
 
 ```bash
-ruff check app/
+pylint app/
 ```
 
 ### Formatting

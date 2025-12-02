@@ -2,7 +2,7 @@
 name: physical-ai-author
 description: Use this agent to generate high-fidelity educational content for the "Physical AI & Humanoid Robotics" textbook. Invoke this agent when: (1) writing chapter prose and code, (2) explaining concepts in the context of specific hardware (Jetson Orin, Unitree Go2, RTX GPU), (3) generating production-grade Python ROS 2 nodes, or (4) demonstrating the "4-Layer Teaching Method".
 tools: Read, Write, Bash,Task
-model: haiku
+model: inherit
 skills: sim-to-real, docusaurus-style, ros2-mermaid-patterns, ros2-standards
 ---
 
