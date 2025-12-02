@@ -13,7 +13,6 @@ import {
   createUserProfile,
   getUserProfile,
   updateUserProfile,
-  type CreateProfileData,
 } from "./profile-service.js";
 
 const app = express();
@@ -25,11 +24,11 @@ app.use(
   cors({
     origin: config.frontendUrl,
     credentials: true,
-  }),
+  })
 );
 
 // Health check endpoint
-app.get("/api/auth/health", (req, res) => {
+app.get("/api/auth/health", (_req, res) => {
   res.json({
     status: "healthy",
     service: "auth-service",
@@ -65,14 +64,14 @@ app.post("/api/auth/signup-with-profile", async (req, res) => {
       return res.json({
         user: signupResponse.user,
         profile,
-        session: signupResponse.session,
+        session: (signupResponse as any).session || null,
       });
     }
 
     return res.json(signupResponse);
   } catch (error: any) {
     console.error("Signup error:", error);
-    res.status(500).json({
+    return res.status(500).json({
       error: "Signup failed",
       message: error.message,
     });
@@ -86,9 +85,9 @@ app.get("/api/auth/profile/:userId", async (req, res) => {
     if (!profile) {
       return res.status(404).json({ error: "Profile not found" });
     }
-    res.json(profile);
+    return res.json(profile);
   } catch (error: any) {
-    res.status(500).json({ error: error.message });
+    return res.status(500).json({ error: error.message });
   }
 });
 
@@ -96,9 +95,9 @@ app.get("/api/auth/profile/:userId", async (req, res) => {
 app.put("/api/auth/profile/:userId", async (req, res) => {
   try {
     const profile = await updateUserProfile(req.params.userId, req.body);
-    res.json(profile);
+    return res.json(profile);
   } catch (error: any) {
-    res.status(500).json({ error: error.message });
+    return res.status(500).json({ error: error.message });
   }
 });
 
@@ -110,21 +109,19 @@ app.all("/api/auth/*", toNodeHandler(auth));
 app.use(
   (
     err: Error,
-    req: express.Request,
+    _req: express.Request,
     res: express.Response,
-    next: express.NextFunction,
+    _next: express.NextFunction,
   ) => {
     console.error("Error:", err);
-    res.status(500).json({
+    return res.status(500).json({
       error: "Internal server error",
       message: process.env.NODE_ENV === "development" ? err.message : undefined,
     });
-  },
+  }
 );
 
 // Start server
 app.listen(Number(PORT), "0.0.0.0", () => {
-  console.log(`🚀 Auth service running on http://0.0.0.0:${PORT}`);
-  console.log(`📚 Auth API available at http://0.0.0.0:${PORT}/api/auth`);
-  console.log(`🏥 Health check at http://0.0.0.0:${PORT}/api/auth/health`);
+  console.log("Auth service started");
 });
