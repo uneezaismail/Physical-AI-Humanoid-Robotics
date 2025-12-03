@@ -128,31 +128,6 @@ app.post("/api/auth/signup-with-profile", async (req, res) => {
   }
 });
 
-// Custom code to log Set-Cookie header for sign-in endpoint
-// This needs to be placed after the auth.api.signIn.email call in SignInForm,
-// but for server-side, we need to inspect the response right before it's sent.
-// Since better-auth handles the /api/auth/* routes, we need to wrap its response.
-// This is tricky. Let's modify the app.all handler to inspect the response.
-app.use("/api/auth/sign-in/email", (req, res, next) => {
-  const originalEnd = res.end;
-  const originalWrite = res.write;
-  const chunks: Buffer[] = [];
-
-  res.write = (...args: any[]) => {
-    chunks.push(Buffer.from(args[0]));
-    return originalWrite.apply(res, args);
-  };
-
-  res.end = (...args: any[]) => {
-    if (res.statusCode === 200) {
-      const setCookieHeader = res.get('Set-Cookie');
-      console.log("DEBUG: Set-Cookie header during sign-in:", setCookieHeader);
-    }
-    originalEnd.apply(res, args);
-  };
-  next();
-});
-
 // Get user profile
 
 // Get user profile
