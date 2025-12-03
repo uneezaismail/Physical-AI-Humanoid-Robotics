@@ -71,6 +71,15 @@ app.get("/api/auth/health", (_req, res) => {
   });
 });
 
+// Custom middleware to log incoming cookies and session status for get-session
+app.use("/api/auth/get-session", async (req, _res, next) => {
+  console.log("--- DEBUG: GET /api/auth/get-session ---");
+  console.log("Incoming Headers (ALL):", req.headers); // Log all headers
+  console.log("Better Auth getSession result (DEBUG):", (await auth.api.getSession({ headers: req.headers as Record<string, string> }))?.user ? "User found" : "No user found");
+  console.log("-----------------------------------------");
+  next();
+});
+
 // Custom signup endpoint that creates both user and profile
 app.post("/api/auth/signup-with-profile", async (req, res) => {
   try {
@@ -96,12 +105,18 @@ app.post("/api/auth/signup-with-profile", async (req, res) => {
         ...profileData,
       });
 
+      // Log Set-Cookie header for debugging signup
+      console.log("DEBUG: Set-Cookie header during signup:", res.get('Set-Cookie'));
+
       return res.json({
         user: signupResponse.user,
         profile,
         session: (signupResponse as any).session || null,
       });
     }
+
+    // Log Set-Cookie header for debugging signup
+    console.log("DEBUG: Set-Cookie header during signup (no profile):", res.get('Set-Cookie'));
 
     return res.json(signupResponse);
   } catch (error: any) {
@@ -112,6 +127,33 @@ app.post("/api/auth/signup-with-profile", async (req, res) => {
     });
   }
 });
+
+// Custom code to log Set-Cookie header for sign-in endpoint
+// This needs to be placed after the auth.api.signIn.email call in SignInForm,
+// but for server-side, we need to inspect the response right before it's sent.
+// Since better-auth handles the /api/auth/* routes, we need to wrap its response.
+// This is tricky. Let's modify the app.all handler to inspect the response.
+app.use("/api/auth/sign-in/email", (req, res, next) => {
+  const originalEnd = res.end;
+  const originalWrite = res.write;
+  const chunks: Buffer[] = [];
+
+  res.write = (...args: any[]) => {
+    chunks.push(Buffer.from(args[0]));
+    return originalWrite.apply(res, args);
+  };
+
+  res.end = (...args: any[]) => {
+    if (res.statusCode === 200) {
+      const setCookieHeader = res.get('Set-Cookie');
+      console.log("DEBUG: Set-Cookie header during sign-in:", setCookieHeader);
+    }
+    originalEnd.apply(res, args);
+  };
+  next();
+});
+
+// Get user profile
 
 // Get user profile
 app.get("/api/auth/profile/:userId", async (req, res) => {
