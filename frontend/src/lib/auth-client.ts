@@ -11,12 +11,11 @@
 import { createAuthClient } from "better-auth/react";
 
 const AUTH_URL =
-  typeof window !== "undefined" && window.__docusaurus?.siteConfig?.customFields?.AUTH_URL
-    ? String(window.__docusaurus.siteConfig.customFields.AUTH_URL)
-    : (typeof window !== "undefined" && window.location.hostname === "localhost"
-      ? "http://localhost:3002"
-      : "https://physical-ai-humanoid-robotics-production-70d6.up.railway.app");
-
+  typeof window !== "undefined" && window.location.hostname === "localhost"
+    ? "http://localhost:3002" // Keep localhost pointing to local backend
+    : typeof window !== "undefined"
+      ? window.location.origin // <--- NEW: Points to "https://...vercel.app"
+      : "";
 
 // Define the auth client with configuration
 export const authClient = createAuthClient({
@@ -83,17 +82,17 @@ export interface SignInData {
  */
 export async function signUpWithProfile(data: SignupData) {
   const response = await fetch(`${AUTH_URL}/api/auth/signup-with-profile`, {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
-    credentials: 'include',
+    credentials: "include",
     body: JSON.stringify(data),
   });
 
   if (!response.ok) {
     const error = await response.json();
-    throw new Error(error.message || 'Signup failed');
+    throw new Error(error.message || "Signup failed");
   }
 
   return response.json();
@@ -102,9 +101,11 @@ export async function signUpWithProfile(data: SignupData) {
 /**
  * Get user profile by user ID
  */
-export async function getUserProfile(userId: string): Promise<UserProfile | null> {
+export async function getUserProfile(
+  userId: string,
+): Promise<UserProfile | null> {
   const response = await fetch(`${AUTH_URL}/api/auth/profile/${userId}`, {
-    credentials: 'include',
+    credentials: "include",
   });
 
   if (!response.ok) {
@@ -117,18 +118,21 @@ export async function getUserProfile(userId: string): Promise<UserProfile | null
 /**
  * Update user profile
  */
-export async function updateUserProfile(userId: string, data: Partial<UserProfile>) {
+export async function updateUserProfile(
+  userId: string,
+  data: Partial<UserProfile>,
+) {
   const response = await fetch(`${AUTH_URL}/api/auth/profile/${userId}`, {
-    method: 'PUT',
+    method: "PUT",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
-    credentials: 'include',
+    credentials: "include",
     body: JSON.stringify(data),
   });
 
   if (!response.ok) {
-    throw new Error('Failed to update profile');
+    throw new Error("Failed to update profile");
   }
 
   return response.json();
