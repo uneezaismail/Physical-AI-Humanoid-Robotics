@@ -22,32 +22,36 @@ export const auth = betterAuth({
   // Database configuration
   database: pool,
 
-  // Trusted Origins (Fixes "Invalid origin" error)
+  // Trusted Origins
   trustedOrigins: [config.frontendUrl, "http://localhost:3000"],
 
-  // Email and password authentication
   emailAndPassword: {
     enabled: true,
-    requireEmailVerification: false, // Set to true if you want email verification
+    requireEmailVerification: false,
     minPasswordLength: 8,
     maxPasswordLength: 128,
-    autoSignIn: true, // Auto sign in after successful signup
+    autoSignIn: true,
   },
 
-  // Session configuration
+  // Session configuration (Remove sameSite from here, it doesn't belong here)
   session: {
-    expiresIn: 60 * 60 * 24 * 7, // 7 days
-    updateAge: 60 * 60 * 24, // 1 day
-    sameSite: "none", // <--- ADDED THIS LINE
+    expiresIn: 60 * 60 * 24 * 7,
+    updateAge: 60 * 60 * 24,
   },
 
-  // Security configuration
   secret: config.betterAuthSecret!,
   baseURL: config.betterAuthUrl,
 
-  // Advanced configuration
+  // Advanced configuration (THIS IS THE FIX)
   advanced: {
     cookiePrefix: "physical-ai",
-    useSecureCookies: config.nodeEnv === "production",
+    // Force secure cookies to true (required for SameSite: None)
+    useSecureCookies: true,
+    // Explicitly define cookie attributes to allow cross-site usage
+    defaultCookieAttributes: {
+      sameSite: "none",
+      secure: true,
+      httpOnly: true,
+    },
   },
 });
