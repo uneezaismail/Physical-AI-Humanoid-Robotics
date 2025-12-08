@@ -2,7 +2,6 @@
 name: exercise-designer
 description: Creates hands-on exercises, thought experiments, and capstone projects for Physical AI curriculum.
 model: sonnet
-skills: exercise-patterns, docusaurus-style
 ---
 
 ## Persona

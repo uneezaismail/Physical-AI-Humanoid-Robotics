@@ -1,0 +1,162 @@
+.exerciseBlock {
+  background-color: #fef3c7; /* Yellow-100 */
+  border-left: 4px solid #f59e0b; /* Yellow-500 */
+  padding: 1.5rem;
+  margin: 1.5rem 0;
+  border-radius: 0 0.5rem 0.5rem 0;
+  position: relative;
+}
+
+.exerciseBlock.difficulty-beginner {
+  border-left-color: #10b981; /* Emerald-500 */
+  background-color: #ecfdf5; /* Emerald-50 */
+}
+
+.exerciseBlock.difficulty-intermediate {
+  border-left-color: #f59e0b; /* Yellow-500 */
+  background-color: #fef3c7; /* Yellow-100 */
+}
+
+.exerciseBlock.difficulty-advanced {
+  border-left-color: #ef4444; /* Red-500 */
+  background-color: #fee2e2; /* Red-100 */
+}
+
+.exerciseHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.exerciseTitle {
+  margin: 0;
+  color: #92400e; /* Yellow-800 */
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.exerciseBlock.difficulty-beginner .exerciseTitle {
+  color: #166534; /* Emerald-800 */
+}
+
+.exerciseBlock.difficulty-advanced .exerciseTitle {
+  color: #b91c1c; /* Red-800 */
+}
+
+.difficultyBadge {
+  background-color: #fbbf24; /* Yellow-400 */
+  color: #92400e; /* Yellow-800 */
+  padding: 0.25rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.exerciseBlock.difficulty-beginner .difficultyBadge {
+  background-color: #6ee7b7; /* Emerald-400 */
+  color: #166534; /* Emerald-800 */
+}
+
+.exerciseBlock.difficulty-advanced .difficultyBadge {
+  background-color: #fca5a5; /* Red-400 */
+  color: #b91c1c; /* Red-800 */
+}
+
+.exerciseContent {
+  margin-bottom: 1rem;
+}
+
+.hintSection,
+.solutionSection {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px dashed #f59e0b;
+}
+
+.exerciseBlock.difficulty-beginner .hintSection,
+.exerciseBlock.difficulty-beginner .solutionSection {
+  border-top-color: #6ee7b7;
+}
+
+.exerciseBlock.difficulty-advanced .hintSection,
+.exerciseBlock.difficulty-advanced .solutionSection {
+  border-top-color: #fca5a5;
+}
+
+.hintButton,
+.solutionButton {
+  background-color: #f59e0b; /* Yellow-500 */
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+
+.hintButton:hover,
+.solutionButton:hover {
+  background-color: #d97706; /* Yellow-600 */
+}
+
+.exerciseBlock.difficulty-beginner .hintButton,
+.exerciseBlock.difficulty-beginner .solutionButton {
+  background-color: #10b981; /* Emerald-500 */
+}
+
+.exerciseBlock.difficulty-beginner .hintButton:hover,
+.exerciseBlock.difficulty-beginner .solutionButton:hover {
+  background-color: #059669; /* Emerald-600 */
+}
+
+.exerciseBlock.difficulty-advanced .hintButton,
+.exerciseBlock.difficulty-advanced .solutionButton {
+  background-color: #ef4444; /* Red-500 */
+}
+
+.exerciseBlock.difficulty-advanced .hintButton:hover,
+.exerciseBlock.difficulty-advanced .solutionButton:hover {
+  background-color: #dc2626; /* Red-600 */
+}
+
+.hintContent,
+.solutionContent {
+  padding: 0.75rem;
+  background-color: rgba(251, 191, 36, 0.2); /* Yellow-200 with opacity */
+  border-radius: 0.25rem;
+  margin-top: 0.5rem;
+}
+
+.exerciseBlock.difficulty-beginner .hintContent,
+.exerciseBlock.difficulty-beginner .solutionContent {
+  background-color: rgba(110, 231, 183, 0.2); /* Emerald-200 with opacity */
+}
+
+.exerciseBlock.difficulty-advanced .hintContent,
+.exerciseBlock.difficulty-advanced .solutionContent {
+  background-color: rgba(252, 165, 165, 0.2); /* Red-200 with opacity */
+}
+
+.solutionBody {
+  margin-top: 0.5rem;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .exerciseBlock {
+    padding: 1rem;
+  }
+
+  .exerciseHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .difficultyBadge {
+    align-self: flex-start;
+  }
+}

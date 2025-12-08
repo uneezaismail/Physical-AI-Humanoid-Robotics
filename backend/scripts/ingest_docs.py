@@ -71,6 +71,9 @@ async def main():
     embedding_service = EmbeddingService()
     qdrant_client = QdrantClient()
 
+    # Override collection name to rag-book
+    qdrant_client.collection_name = "rag-book"
+
     # Recreate Qdrant collection for fresh ingestion
     await qdrant_client.recreate_collection(vector_size=embedding_service.embedding_dim)
 

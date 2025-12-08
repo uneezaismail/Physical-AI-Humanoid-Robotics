@@ -29,7 +29,7 @@
     --ifm-background-surface-color: #e0e0e0; /* Slightly lighter surface for cards, sections */
     --ifm-code-background: #1a1a2e; /* Darker background for code blocks */
 
-    --ifm-text-color: #e0e0e0; /* Light Gray - General text */
+    --ifm-text-color: #ffffff; /* White - General text for visibility in both dark and light modes */
     --ifm-code-font-size: 95%;
     --docusaurus-highlighted-code-line-bg: rgba(
         0,
@@ -39,6 +39,11 @@
     ); /* Cyan highlight */
 }
 
+
+body
+.html{
+  color:#ffffff
+}
 /* Force Dark Mode colors for initial load if preferred */
 [data-theme="dark"] {
     --ifm-color-primary: #00e6e6;

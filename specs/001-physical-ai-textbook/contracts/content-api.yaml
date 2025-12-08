@@ -1,0 +1,182 @@
+# Content Management API Contract
+
+## Overview
+This document defines the API contract for content management functionality in the Physical AI & Humanoid Robotics textbook platform.
+
+## Base URL
+`http://localhost:8000/api` (development)
+`https://your-backend-domain.com/api` (production)
+
+## Authentication
+All endpoints require authentication via Better Auth session cookies for content management operations.
+
+## Endpoints
+
+### GET /content/modules
+Retrieve a list of all available modules.
+
+#### Query Parameters
+- `include_chapters` (boolean, optional): Include chapter details in response (default: false)
+
+#### Response
+```json
+[
+  {
+    "id": "module-1-ros2",
+    "title": "The Robotic Nervous System (ROS 2)",
+    "description": "Foundations of Physical AI and ROS 2 architecture",
+    "weeks_duration": 5,
+    "learning_outcomes": [
+      "Understand how robots think, communicate, and coordinate"
+    ],
+    "chapters_count": 5,
+    "estimated_duration": "5 weeks"
+  }
+]
+```
+
+### GET /content/modules/{module_id}
+Retrieve details of a specific module including its chapters.
+
+#### Path Parameters
+- `module_id` (string, required): ID of the module (e.g., "module-1-ros2")
+
+#### Response
+```json
+{
+  "id": "module-1-ros2",
+  "title": "The Robotic Nervous System (ROS 2)",
+  "description": "Foundations of Physical AI and ROS 2 architecture",
+  "weeks_duration": 5,
+  "learning_outcomes": [
+    "Understand how robots think, communicate, and coordinate"
+  ],
+  "chapters": [
+    {
+      "id": "chapter-01-intro-physical-ai",
+      "title": "Introduction to Physical AI",
+      "word_count": 950,
+      "estimated_reading_time": 4,
+      "learning_outcomes": [
+        "Define Physical AI and embodied intelligence"
+      ]
+    }
+  ]
+}
+```
+
+### GET /content/chapters/{chapter_id}
+Retrieve a specific chapter's content and metadata.
+
+#### Path Parameters
+- `chapter_id` (string, required): ID of the chapter (e.g., "chapter-01-intro-physical-ai")
+
+#### Response
+```json
+{
+  "id": "chapter-01-intro-physical-ai",
+  "title": "Introduction to Physical AI",
+  "module_id": "module-1-ros2",
+  "content": "# Chapter Content in MDX Format...",
+  "learning_outcomes": [
+    "Define Physical AI and embodied intelligence",
+    "Explain the difference between digital and physical AI",
+    "Identify key applications of Physical AI"
+  ],
+  "prerequisites": [
+    "Basic understanding of robotics concepts",
+    "Python programming fundamentals"
+  ],
+  "reflection_questions": [
+    "How does Physical AI differ from traditional AI?",
+    "What are the challenges of implementing AI in physical systems?"
+  ],
+  "teaching_scaffolds": {
+    "before_you_learn": "Review basic robotics concepts if needed",
+    "common_misunderstanding": "Physical AI is not just robotics with AI",
+    "real_world_analogy": "Think of Physical AI as giving a brain to a body",
+    "chatbot_help_topics": ["Physical AI definition", "Embodied intelligence"]
+  },
+  "word_count": 950,
+  "estimated_reading_time": 4,
+  "created_at": "2025-11-28T10:00:00Z",
+  "updated_at": "2025-12-01T15:30:00Z"
+}
+```
+
+### GET /content/chapters/{chapter_id}/interactive-elements
+Retrieve interactive elements for a specific chapter.
+
+#### Path Parameters
+- `chapter_id` (string, required): ID of the chapter
+
+#### Response
+```json
+{
+  "chapter_id": "chapter-01-intro-physical-ai",
+  "elements": [
+    {
+      "id": "exercise-001",
+      "type": "exercise",
+      "title": "Identify Physical AI Applications",
+      "content": "List 3 examples of Physical AI in real-world applications...",
+      "solution": "1. Tesla Optimus robot, 2. Boston Dynamics robots, 3. Autonomous vehicles",
+      "difficulty": "beginner"
+    },
+    {
+      "id": "code-example-001",
+      "type": "code_example",
+      "title": "Basic ROS 2 Node Structure",
+      "content": "```python\nimport rclpy\nfrom rclpy.node import Node\n\nclass MinimalNode(Node):\n    def __init__(self):\n        super().__init__('minimal_node')\n        self.get_logger().info('Hello, ROS 2!')\n```",
+      "expected_output": "[INFO] [minimal_node]: Hello, ROS 2!"
+    }
+  ]
+}
+```
+
+### GET /content/search
+Search across all textbook content.
+
+#### Query Parameters
+- `q` (string, required): Search query (1-500 characters)
+- `module_id` (string, optional): Filter by specific module
+- `limit` (integer, optional): Maximum number of results (default: 10, max: 50)
+
+#### Response
+```json
+{
+  "query": "ROS 2 nodes",
+  "results": [
+    {
+      "id": "chapter-02-ros2-architecture",
+      "title": "ROS 2 Architecture",
+      "module": {
+        "id": "module-1-ros2",
+        "title": "The Robotic Nervous System (ROS 2)"
+      },
+      "preview": "In ROS 2, nodes are the fundamental building blocks that perform computations...",
+      "relevance_score": 0.95,
+      "url": "/docs/module-1-ros2/chapter-02-ros2-architecture"
+    }
+  ],
+  "total_results": 1,
+  "took_ms": 45
+}
+```
+
+## Rate Limiting
+- 60 requests per minute per authenticated user for content retrieval
+- 30 requests per minute per IP for search endpoints
+- Rate limit headers included in responses
+
+## Security
+- Content retrieval endpoints are public but rate-limited
+- Content modification endpoints require admin authentication
+- Sensitive metadata is not exposed in public responses
+- Content is validated for security before storage
+
+## Performance Targets
+- Chapter retrieval: < 100ms
+- Search response: < 500ms
+- Module listing: < 50ms
+- Content search: < 300ms

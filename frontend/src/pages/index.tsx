@@ -34,7 +34,7 @@ export default function Home(): ReactNode {
             </p>
             <Link
               className={styles.startReadingBtn}
-              to="/docs/part-1-foundations-lab/chapter-1-embodied-ai"
+              to="/docs/part-1-foundations-lab/chapter-01-embodied-ai"
             >
               Start Reading
             </Link>
