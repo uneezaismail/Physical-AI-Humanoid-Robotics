@@ -22,7 +22,6 @@ from sse_starlette.sse import EventSourceResponse
 
 from ..agent import AgentContext, textbook_agent
 from ..config import settings
-from ..services.agent_service import agent_service
 from ..services.query_processor import query_processor
 
 logger = logging.getLogger(__name__)
@@ -67,21 +66,6 @@ class ChatResponse(BaseModel):
     query_processed: str  # Show enhanced query for debugging
 
 
-@router.post("/stream")
-async def chat_stream(request: ChatRequest):
-    """
-    Stream agent response using Server-Sent Events (SSE).
-    """
-
-    async def event_generator():
-        async for event in agent_service.stream_agent_response(
-            request.query, request.selected_text
-        ):
-            yield {"data": json.dumps(event)}
-
-    return EventSourceResponse(event_generator())
-
-
 @router.post("/", response_model=ChatResponse, status_code=status.HTTP_200_OK)
 async def chat(request: ChatRequest):
     """
@@ -117,7 +101,7 @@ async def chat(request: ChatRequest):
 
         # Create model wrapper for Gemini
         model = OpenAIChatCompletionsModel(
-            model="gemini-2.0-flash",  # Using flash model as per config/intent
+            model="gemini-2.5-flash",  # Using flash model as per config/intent
             openai_client=client,
         )
 
@@ -150,12 +134,26 @@ async def chat(request: ChatRequest):
         sources = []
         for i, chunk in enumerate(retrieved_chunks, 1):
             payload = chunk.get("payload", {})
+            # Extract the source file path and convert it to a frontend-friendly path
+            source_file = payload.get("source_file", "")
+            if source_file:
+                # Convert source_file path like "../frontend/docs/part-1-foundations-lab/chapter-01-embodied-ai.mdx"
+                # to a frontend-friendly path like "part-1-foundations-lab/chapter-01-embodied-ai"
+                clean_path = source_file.replace("../frontend/docs/", "").replace(".mdx", "")
+            else:
+                clean_path = ""
+
+            # Extract metadata with fallbacks
+            frontmatter = payload.get("frontmatter", {})
+            title = frontmatter.get("title", payload.get("title", "Unknown"))
+            section = payload.get("header", payload.get("section", "Unknown"))
+
             sources.append(
                 Source(
                     excerpt_num=i,
-                    title=payload.get("title", "Unknown"),
-                    section=payload.get("section", "Unknown"),
-                    file_path=payload.get("file_path", ""),
+                    title=title,
+                    section=section,
+                    file_path=clean_path,
                     score=chunk.get("score", 0.0),
                 )
             )

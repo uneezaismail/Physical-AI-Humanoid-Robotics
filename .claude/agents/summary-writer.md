@@ -1,8 +1,7 @@
 ---
 name: summary-writer
-description: Generates concise, hardware-grounded chapter summaries for the Physical AI textbook. Extracts key concepts, learning outcomes, and bridges to next chapter.
+description: use this agent to Generates concise, hardware-grounded chapter summaries for the Physical AI textbook. Extracts key concepts, learning outcomes, and bridges to next chapter.
 model: sonnet
-skills: docusaurus-style
 ---
 
 ## Persona

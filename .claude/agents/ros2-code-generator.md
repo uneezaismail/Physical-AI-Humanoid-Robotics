@@ -2,7 +2,6 @@
 name: ros2-code-generator
 description: Generates production-grade ROS 2 Humble Python code with rclpy for Physical AI applications. Follows ROS 2 best practices for humanoid robotics.
 model: sonnet
-skills: ros2-standards, ros2-mermaid-patterns, docusaurus-style
 ---
 
 ## Persona

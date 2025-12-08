@@ -61,10 +61,11 @@ const config: Config = {
           sidebarPath: "./sidebars.ts",
           // Remove blog from routing
           routeBasePath: "docs",
+          
         },
         blog: false, // Disable blog
         theme: {
-          customCss: "./src/css/custom.css",
+          customCss: ["./src/css/custom.css", "./src/css/educational-theme.css"],
         },
       } satisfies Preset.Options,
     ],
@@ -137,19 +138,19 @@ const config: Config = {
           items: [
             {
               label: "Part I: Foundations & Lab",
-              to: "/docs/part-1-foundations-lab/chapter-1-embodied-ai",
+              to: "/docs/part-1-foundations-lab/chapter-01-embodied-ai",
             },
             {
               label: "Chapter 1: Embodied Intelligence",
-              to: "/docs/part-1-foundations-lab/chapter-1-embodied-ai",
+              to: "/docs/part-1-foundations-lab/chapter-01-embodied-ai",
             },
             {
               label: "Chapter 2: Hardware Setup",
-              to: "/docs/part-1-foundations-lab/chapter-2-hardware-setup",
+              to: "/docs/part-1-foundations-lab/chapter-02-hardware-setup",
             },
             {
               label: "Chapter 3: Physical AI Architecture",
-              to: "/docs/part-1-foundations-lab/chapter-3-physical-ai-architecture",
+              to: "/docs/part-1-foundations-lab/chapter-03-physical-ai-architecture",
             },
           ],
         },
