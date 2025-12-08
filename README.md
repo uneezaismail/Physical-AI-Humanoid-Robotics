@@ -16,19 +16,6 @@ Unlike traditional static textbooks, this platform features:
 
 ## 🏗️ Architecture
 
-The system follows a modern microservices architecture:
-
-```mermaid
-graph TD
-    User[Student] --> Frontend[Frontend (Docusaurus)]
-    Frontend --> Auth[Auth Service (Node.js)]
-    Frontend --> Backend[Backend (Python FastAPI)]
-    
-    Auth --> DB[(Neon PostgreSQL)]
-    Backend --> VectorDB[(Qdrant Cloud)]
-    Backend --> LLM[Gemini 1.5 Flash]
-```
-
 ### 1. Frontend (`/frontend`)
 - **Tech**: Docusaurus (React/TypeScript)
 - **Role**: Renders the textbook content (MDX), manages UI state, and hosts the interactive Chat Widget.
