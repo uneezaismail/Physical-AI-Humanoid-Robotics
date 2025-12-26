@@ -55,8 +55,10 @@ export function LocaleRedirect(): null {
       // Read language preference from localStorage
       const storedPreference = localStorage.getItem(LANGUAGE_PREFERENCE_KEY);
 
+      // ONLY redirect if user explicitly set preference AND it's Urdu
+      // Don't redirect on first visit (null preference)
       if (storedPreference === 'ur') {
-        // User prefers Urdu but is on English page - redirect
+        // User explicitly chose Urdu - redirect to Urdu version
         const urduPath = `/ur${location.pathname}${location.search}${location.hash}`;
 
         console.log('[LocaleRedirect] Redirecting to preferred Urdu locale:', urduPath);
@@ -67,7 +69,7 @@ export function LocaleRedirect(): null {
         // Mark as redirected to prevent redirect loops
         hasRedirected.current = true;
       } else if (storedPreference === 'en' || storedPreference === null) {
-        // User prefers English or has no preference - stay on English
+        // User prefers English or has no preference - stay on English (default)
         console.log('[LocaleRedirect] Staying on default English locale');
       } else {
         // Invalid value in localStorage - ignore
