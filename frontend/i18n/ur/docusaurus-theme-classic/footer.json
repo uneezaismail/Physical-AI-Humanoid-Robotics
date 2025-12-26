@@ -1,0 +1,46 @@
+{
+  "link.title.Textbook": {
+    "message": "نصابی کتاب",
+    "description": "Footer میں Textbook عنوان کے ساتھ footer links column کا عنوان"
+  },
+  "link.title.Resources": {
+    "message": "وسائل",
+    "description": "Footer میں Resources عنوان کے ساتھ footer links column کا عنوان"
+  },
+  "link.title.More": {
+    "message": "مزید",
+    "description": "Footer میں More عنوان کے ساتھ footer links column کا عنوان"
+  },
+  "link.item.label.Part I: Foundations & Lab": {
+    "message": "حصہ I: بنیادیں اور لیب",
+    "description": "Footer link کا label Part I: Foundations & Lab کے ساتھ"
+  },
+  "link.item.label.Chapter 1: Embodied Intelligence": {
+    "message": "باب 1: جسمانی ذہانت",
+    "description": "Footer link کا label Chapter 1: Embodied Intelligence کے ساتھ"
+  },
+  "link.item.label.Chapter 2: Hardware Setup": {
+    "message": "باب 2: ہارڈویئر سیٹ اپ",
+    "description": "Footer link کا label Chapter 2: Hardware Setup کے ساتھ"
+  },
+  "link.item.label.Chapter 3: Physical AI Architecture": {
+    "message": "باب 3: فزیکل AI فن تعمیر",
+    "description": "Footer link کا label Chapter 3: Physical AI Architecture کے ساتھ"
+  },
+  "link.item.label.ROS 2 Documentation": {
+    "message": "ROS 2 Documentation",
+    "description": "The label of footer link with label=ROS 2 Documentation linking to https://docs.ros.org/en/humble/"
+  },
+  "link.item.label.Gazebo Harmonic": {
+    "message": "Gazebo Harmonic",
+    "description": "The label of footer link with label=Gazebo Harmonic linking to https://gazebosim.org/docs/harmonic/getstarted/"
+  },
+  "link.item.label.GitHub": {
+    "message": "GitHub",
+    "description": "The label of footer link with label=GitHub linking to https://github.com/uneezaismail/physical-ai-and-humanoid-robotics"
+  },
+  "copyright": {
+    "message": "کاپی رائٹ © 2025 فزیکل AI اور انسان نما روبوٹکس۔ Docusaurus کے ساتھ تعمیر شدہ۔",
+    "description": "Footer copyright"
+  }
+}

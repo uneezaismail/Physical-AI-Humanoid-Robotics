@@ -1,0 +1,168 @@
+/**
+ * LanguageSwitcher Component Styles
+ *
+ * Design Goals:
+ * - Clear visual hierarchy (button below chapter title)
+ * - Accessible touch targets (44x44px minimum)
+ * - Responsive design (mobile and desktop)
+ * - Clear disabled state indication
+ * - Smooth transitions and hover effects
+ */
+
+/* ============================================================================
+   Base Button Styles
+   ============================================================================ */
+
+.languageSwitcher {
+  /* Layout */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 16px;
+  margin-bottom: 16px;
+  min-height: 44px; /* WCAG touch target minimum */
+  min-width: 44px;
+
+  /* Typography */
+  font-size: 14px;
+  font-weight: 500;
+  font-family: var(--ifm-font-family-base);
+  line-height: 1.5;
+
+  /* Visual Style */
+  background-color: var(--ifm-background-color);
+  color: var(--ifm-font-color-base);
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: 4px;
+
+  /* Interaction */
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+
+  /* Prevent text highlighting on double-click */
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ============================================================================
+   Hover State
+   ============================================================================ */
+
+.languageSwitcher:hover:not(:disabled) {
+  background-color: var(--ifm-color-primary);
+  color: white;
+  border-color: var(--ifm-color-primary);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* ============================================================================
+   Active/Focus States
+   ============================================================================ */
+
+.languageSwitcher:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+}
+
+.languageSwitcher:focus {
+  outline: 2px solid var(--ifm-color-primary);
+  outline-offset: 2px;
+}
+
+.languageSwitcher:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* ============================================================================
+   Disabled State
+   ============================================================================ */
+
+.languageSwitcher:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background-color: var(--ifm-color-emphasis-100);
+  border-color: var(--ifm-color-emphasis-200);
+  color: var(--ifm-color-emphasis-600);
+  transform: none;
+  box-shadow: none;
+}
+
+/* ============================================================================
+   Label and Icon
+   ============================================================================ */
+
+.label {
+  white-space: nowrap;
+}
+
+.icon {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+/* ============================================================================
+   Mobile Responsive
+   ============================================================================ */
+
+@media (max-width: 768px) {
+  .languageSwitcher {
+    font-size: 12px;
+    padding: 6px 12px;
+    margin-bottom: 12px;
+  }
+
+  .label {
+    font-size: 12px;
+  }
+
+  .icon {
+    font-size: 11px;
+  }
+}
+
+/* Ensure button doesn't wrap on very small screens */
+@media (max-width: 480px) {
+  .languageSwitcher {
+    padding: 6px 10px;
+    font-size: 11px;
+  }
+}
+
+/* ============================================================================
+   Dark Mode Adjustments
+   ============================================================================ */
+
+[data-theme='dark'] .languageSwitcher {
+  border-color: var(--ifm-color-emphasis-400);
+}
+
+[data-theme='dark'] .languageSwitcher:hover:not(:disabled) {
+  border-color: var(--ifm-color-primary);
+}
+
+[data-theme='dark'] .languageSwitcher:disabled {
+  background-color: var(--ifm-color-emphasis-200);
+  border-color: var(--ifm-color-emphasis-300);
+}
+
+/* ============================================================================
+   RTL Support
+   ============================================================================ */
+
+[dir='rtl'] .languageSwitcher {
+  /* Maintain LTR text direction for language labels */
+  /* "Translate to Urdu" should read left-to-right even in RTL context */
+  direction: ltr;
+}
+
+/* ============================================================================
+   Print Styles
+   ============================================================================ */
+
+@media print {
+  .languageSwitcher {
+    display: none; /* Hide button when printing */
+  }
+}
