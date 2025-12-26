@@ -4,47 +4,47 @@
     "description": "The label for version current"
   },
   "sidebar.tutorialSidebar.category.Part I: Foundations & Lab": {
-    "message": "Part I: Foundations & Lab",
+    "message": "حصہ I: بنیادیں اور لیبارٹری",
     "description": "The label for category 'Part I: Foundations & Lab' in sidebar 'tutorialSidebar'"
   },
   "sidebar.tutorialSidebar.category.Part II: Robotic Nervous System": {
-    "message": "Part II: Robotic Nervous System",
+    "message": "حصہ II: روبوٹک اعصابی نظام",
     "description": "The label for category 'Part II: Robotic Nervous System' in sidebar 'tutorialSidebar'"
   },
   "sidebar.tutorialSidebar.category.Part III: Digital Twin": {
-    "message": "Part III: Digital Twin",
+    "message": "حصہ III: ڈیجیٹل جڑواں",
     "description": "The label for category 'Part III: Digital Twin' in sidebar 'tutorialSidebar'"
   },
   "sidebar.tutorialSidebar.category.Part IV: AI Robot Brain": {
-    "message": "Part IV: AI Robot Brain",
+    "message": "حصہ IV: AI روبوٹ دماغ",
     "description": "The label for category 'Part IV: AI Robot Brain' in sidebar 'tutorialSidebar'"
   },
   "sidebar.tutorialSidebar.category.Part V: VLA Capstone": {
-    "message": "Part V: VLA Capstone",
+    "message": "حصہ V: VLA کیپسٹون",
     "description": "The label for category 'Part V: VLA Capstone' in sidebar 'tutorialSidebar'"
   },
   "sidebar.tutorialSidebar.doc.Chapter 1: Embodied AI - Where Intelligence Meets the Physical World": {
-    "message": "Chapter 1: Embodied AI - Where Intelligence Meets the Physical World",
+    "message": "باب 1: جسمانی AI - جہاں ذہانت جسمانی دنیا سے ملتی ہے",
     "description": "The label for the doc item 'Chapter 1: Embodied AI - Where Intelligence Meets the Physical World' in sidebar 'tutorialSidebar', linking to the doc part-1-foundations-lab/chapter-01-embodied-ai"
   },
   "sidebar.tutorialSidebar.doc.Chapter 2: Hardware Setup - Building Your Physical AI Foundation": {
-    "message": "Chapter 2: Hardware Setup - Building Your Physical AI Foundation",
+    "message": "باب 2: ہارڈویئر سیٹ اپ - اپنی فزیکل AI بنیاد تعمیر کرنا",
     "description": "The label for the doc item 'Chapter 2: Hardware Setup - Building Your Physical AI Foundation' in sidebar 'tutorialSidebar', linking to the doc part-1-foundations-lab/chapter-02-hardware-setup"
   },
   "sidebar.tutorialSidebar.doc.Chapter 3: Physical AI Architecture - The Three-Tier System": {
-    "message": "Chapter 3: Physical AI Architecture - The Three-Tier System",
+    "message": "باب 3: فزیکل AI آرکیٹیکچر - تین درجے کا نظام",
     "description": "The label for the doc item 'Chapter 3: Physical AI Architecture - The Three-Tier System' in sidebar 'tutorialSidebar', linking to the doc part-1-foundations-lab/chapter-03-physical-ai-architecture"
   },
   "sidebar.tutorialSidebar.doc.Chapter 4: ROS2 Architecture - The Nervous System of Physical AI": {
-    "message": "Chapter 4: ROS2 Architecture - The Nervous System of Physical AI",
+    "message": "باب 4: ROS2 آرکیٹیکچر - فزیکل AI کا اعصابی نظام",
     "description": "The label for the doc item 'Chapter 4: ROS2 Architecture - The Nervous System of Physical AI' in sidebar 'tutorialSidebar', linking to the doc part-2-robotic-nervous-system/chapter-04-ros2-architecture"
   },
   "sidebar.tutorialSidebar.doc.Chapter 5: Nodes, Topics, Services - The Building Blocks of ROS2": {
-    "message": "Chapter 5: Nodes, Topics, Services - The Building Blocks of ROS2",
+    "message": "باب 5: نوڈز، ٹاپکس، سروسز - ROS2 کے بنیادی عناصر",
     "description": "The label for the doc item 'Chapter 5: Nodes, Topics, Services - The Building Blocks of ROS2' in sidebar 'tutorialSidebar', linking to the doc part-2-robotic-nervous-system/chapter-05-nodes-topics-services"
   },
   "sidebar.tutorialSidebar.doc.Chapter 6: Python rclpy - Building ROS2 Nodes in Python": {
-    "message": "Chapter 6: Python rclpy - Building ROS2 Nodes in Python",
+    "message": "باب 6: Python rclpy - Python میں ROS2 نوڈز بنانا",
     "description": "The label for the doc item 'Chapter 6: Python rclpy - Building ROS2 Nodes in Python' in sidebar 'tutorialSidebar', linking to the doc part-2-robotic-nervous-system/chapter-06-python-rclpy"
   },
   "sidebar.tutorialSidebar.doc.Chapter 7: URDF Humanoids - Describing Robots with Unified Robot Description Format": {

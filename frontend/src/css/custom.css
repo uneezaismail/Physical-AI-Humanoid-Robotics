@@ -3,7 +3,6 @@
  */
 
 @import './auth.css';
-@import './rtl.css';
 
 :root {
     --ifm-color-primary: #4de1c1; /* Cyan base */
