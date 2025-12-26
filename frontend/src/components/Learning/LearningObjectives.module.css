@@ -1,0 +1,96 @@
+.learningObjectives {
+  background-color: #f8fafc; /* Gray-50 */
+  border-left: 4px solid #3b82f6; /* Blue-500 */
+  padding: 1rem 1.5rem;
+  margin: 1.5rem 0;
+  border-radius: 0 0.5rem 0.5rem 0;
+}
+
+.learningObjectives.bloom-remember {
+  border-left-color: #60a5fa; /* Blue-400 */
+}
+
+.learningObjectives.bloom-understand {
+  border-left-color: #3b82f6; /* Blue-500 */
+}
+
+.learningObjectives.bloom-apply {
+  border-left-color: #2563eb; /* Blue-600 */
+}
+
+.learningObjectives.bloom-analyze {
+  border-left-color: #1d4ed8; /* Blue-700 */
+}
+
+.learningObjectives.bloom-evaluate {
+  border-left-color: #1e40af; /* Blue-800 */
+}
+
+.learningObjectives.bloom-create {
+  border-left-color: #1e3a8a; /* Blue-900 */
+}
+
+.objectivesTitle {
+  margin-top: 0;
+  color: #1e293b; /* Gray-800 */
+  font-weight: 600;
+  font-size: 1.25rem;
+}
+
+.bloomLevel {
+  margin: 0.5rem 0 1rem;
+  color: #64748b; /* Gray-600 */
+  font-size: 0.875rem;
+  font-style: italic;
+}
+
+.objectivesList {
+  margin-bottom: 0;
+  padding-left: 1.5rem;
+}
+
+.objectiveItem {
+  margin-bottom: 0.5rem;
+  color: #334155; /* Gray-700 */
+  position: relative;
+  padding-left: 1.25rem;
+}
+
+.objectiveItem::before {
+  content: "•";
+  color: #3b82f6; /* Blue-500 */
+  font-weight: bold;
+  position: absolute;
+  left: 0;
+}
+
+.learningObjectives.bloom-remember .objectiveItem::before {
+  color: #60a5fa; /* Blue-400 */
+}
+
+.learningObjectives.bloom-understand .objectiveItem::before {
+  color: #3b82f6; /* Blue-500 */
+}
+
+.learningObjectives.bloom-apply .objectiveItem::before {
+  color: #2563eb; /* Blue-600 */
+}
+
+.learningObjectives.bloom-analyze .objectiveItem::before {
+  color: #1d4ed8; /* Blue-700 */
+}
+
+.learningObjectives.bloom-evaluate .objectiveItem::before {
+  color: #1e40af; /* Blue-800 */
+}
+
+.learningObjectives.bloom-create .objectiveItem::before {
+  color: #1e3a8a; /* Blue-900 */
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .learningObjectives {
+    padding: 1rem;
+  }
+}

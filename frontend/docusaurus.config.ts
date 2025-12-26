@@ -22,12 +22,27 @@ const config: Config = {
   onBrokenLinks: "warn", // Temporarily warn instead of throw during development
   onBrokenMarkdownLinks: "warn",
 
-  // Even if you don't use internationalization, you can use this field to set
-  // useful metadata like html lang. For example, if your site is Chinese, you
-  // may want to replace "en" with "zh-Hans".
+  // CRITICAL for Vercel deployment with i18n
+  trailingSlash: false,
+
+  // Internationalization (i18n) configuration
+  // Supports English (default) and Urdu with RTL layout
   i18n: {
     defaultLocale: "en",
-    locales: ["en"],
+    locales: ["en", "ur"],
+    path: "i18n",
+    localeConfigs: {
+      en: {
+        label: "English",
+        direction: "ltr",
+        htmlLang: "en-US",
+      },
+      ur: {
+        label: "اردو",
+        direction: "rtl", // RIGHT-TO-LEFT for Urdu
+        htmlLang: "ur-PK",
+      },
+    },
   },
 
   // Enable Mermaid diagrams
@@ -61,10 +76,11 @@ const config: Config = {
           sidebarPath: "./sidebars.ts",
           // Remove blog from routing
           routeBasePath: "docs",
+          
         },
         blog: false, // Disable blog
         theme: {
-          customCss: "./src/css/custom.css",
+          customCss: ["./src/css/custom.css", "./src/css/educational-theme.css"],
         },
       } satisfies Preset.Options,
     ],
@@ -137,19 +153,19 @@ const config: Config = {
           items: [
             {
               label: "Part I: Foundations & Lab",
-              to: "/docs/part-1-foundations-lab/chapter-1-embodied-ai",
+              to: "/docs/part-1-foundations-lab/chapter-01-embodied-ai",
             },
             {
               label: "Chapter 1: Embodied Intelligence",
-              to: "/docs/part-1-foundations-lab/chapter-1-embodied-ai",
+              to: "/docs/part-1-foundations-lab/chapter-01-embodied-ai",
             },
             {
               label: "Chapter 2: Hardware Setup",
-              to: "/docs/part-1-foundations-lab/chapter-2-hardware-setup",
+              to: "/docs/part-1-foundations-lab/chapter-02-hardware-setup",
             },
             {
               label: "Chapter 3: Physical AI Architecture",
-              to: "/docs/part-1-foundations-lab/chapter-3-physical-ai-architecture",
+              to: "/docs/part-1-foundations-lab/chapter-03-physical-ai-architecture",
             },
           ],
         },

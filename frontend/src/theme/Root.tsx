@@ -1,11 +1,17 @@
 /**
  * Root wrapper - Adds global components to all pages
+ *
+ * Global Components:
+ * - LocaleRedirect: Handles automatic redirect to preferred language (User Story 2)
+ * - FloatingChatButton: RAG chatbot interface
+ * - AuthModal: Authentication UI
  */
 
 import React, { useEffect } from "react";
 import FloatingChatButton from "../components/FloatingChatButton";
 import { AuthProvider, useAuth } from "../components/Auth/AuthContext";
 import AuthModal from "../components/Auth/AuthModal";
+import { LocaleRedirect } from "../components/LocaleRedirect";
 
 // This is the component that will be wrapped by AuthProvider
 const RootContent = ({
@@ -28,6 +34,7 @@ const RootContent = ({
 
   return (
     <>
+      <LocaleRedirect />
       {children}
       <FloatingChatButton />
       {isModalOpen && (

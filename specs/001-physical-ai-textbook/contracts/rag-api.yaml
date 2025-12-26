@@ -1,0 +1,121 @@
+# RAG API Contract
+
+## Overview
+This document defines the API contract for the Retrieval-Augmented Generation (RAG) functionality that powers the interactive chatbot in the Physical AI & Humanoid Robotics textbook.
+
+## Base URL
+`http://localhost:8000/api` (development)
+`https://your-backend-domain.com/api` (production)
+
+## Authentication
+All endpoints require authentication via Better Auth session cookies. Public endpoints have rate limiting applied.
+
+## Endpoints
+
+### POST /rag/query
+Submit a query to the RAG system to get contextually relevant answers from textbook content.
+
+#### Request
+```json
+{
+  "query": "What is the difference between ROS 2 nodes and services?",
+  "user_id": "optional_user_id",
+  "context": {
+    "current_module": "module-1-ros2",
+    "current_chapter": "chapter-02-ros2-architecture"
+  }
+}
+```
+
+#### Request Validation
+- `query` (string, required): 10-500 characters
+- `user_id` (string, optional): User identifier for personalization
+- `context` (object, optional): Current learning context
+
+#### Response
+```json
+{
+  "response": "In ROS 2, nodes are the fundamental building blocks that perform computations...",
+  "sources": [
+    {
+      "chapter_id": "chapter-02-ros2-architecture",
+      "title": "ROS 2 Architecture",
+      "section": "Nodes and Services",
+      "relevance_score": 0.92
+    }
+  ],
+  "confidence": 0.85,
+  "query_id": "unique_query_identifier"
+}
+```
+
+#### Response Validation
+- `response` (string): AI-generated answer to the query
+- `sources` (array): List of content sources used in the response
+- `confidence` (number): Confidence score between 0.0-1.0
+- `query_id` (string): Unique identifier for the query
+
+#### Error Responses
+- `400 Bad Request`: Query validation failed
+- `422 Unprocessable Entity`: Invalid request format
+- `429 Too Many Requests`: Rate limit exceeded
+- `500 Internal Server Error`: Processing error
+
+### POST /rag/feedback
+Submit feedback on a RAG response to improve future responses.
+
+#### Request
+```json
+{
+  "query_id": "unique_query_identifier",
+  "rating": 5,
+  "comment": "The response was very helpful and accurate."
+}
+```
+
+#### Request Validation
+- `query_id` (string, required): ID of the original query
+- `rating` (integer, required): Rating from 1-5
+- `comment` (string, optional): Additional feedback
+
+#### Response
+```json
+{
+  "status": "feedback_received",
+  "query_id": "unique_query_identifier"
+}
+```
+
+### GET /rag/health
+Check the health status of the RAG service.
+
+#### Response
+```json
+{
+  "status": "healthy",
+  "timestamp": "2025-12-05T10:30:00Z",
+  "services": {
+    "qdrant": "connected",
+    "gemini": "available",
+    "content_db": "ready"
+  }
+}
+```
+
+## Rate Limiting
+- 30 requests per minute per IP for public endpoints
+- Rate limit headers included in responses:
+  - `X-RateLimit-Limit`: Request limit per window
+  - `X-RateLimit-Remaining`: Remaining requests in current window
+  - `X-RateLimit-Reset`: Time when limit resets
+
+## Security
+- Input sanitization applied to all query parameters
+- Query length limited to 500 characters
+- CORS restricted to frontend domain only
+- Structured logging with sensitive data sanitized
+
+## Performance Targets
+- Response time: < 3 seconds (p95)
+- Qdrant vector search: < 500ms
+- Availability: 99.9%

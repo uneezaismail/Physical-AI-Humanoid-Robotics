@@ -24,7 +24,7 @@ class Settings(BaseSettings):
     # Qdrant Configuration
     qdrant_api_key: str
     qdrant_url: str
-    qdrant_collection_name: str = "rag-embedding"
+    qdrant_collection_name: str = "rag-book"
 
     # Gemini Configuration
     gemini_api_key: str
@@ -34,6 +34,12 @@ class Settings(BaseSettings):
     environment: str = "development"
     cors_origins: str = "http://localhost:3000,http://localhost:3001,https://physical-ai-humanoid-robotics-eight.vercel.app"
     rate_limit_per_minute: int = 100
+
+    # Authentication Service Configuration (for compatibility)
+    auth_service_url: str = "http://localhost:3002"
+
+    # Database Configuration (for compatibility)
+    neon_database_url: str = ""
 
     class Config:
         """Pydantic configuration."""
