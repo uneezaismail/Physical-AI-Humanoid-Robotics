@@ -133,7 +133,7 @@ class QdrantClient:
                 payload = r.get("payload", {})
                 # Extract chapter/topic path for citation
                 source_file_path = payload.get("source_file", "N/A")
-                # Example: ../frontend/docs/01-part-1-foundations-lab/01-chapter-1-embodied-ai/00-intro.mdx
+                # Example: ../frontend/docs/part-1-foundations-lab/chapter-01-embodied-ai.mdx
                 # Convert to frontend-friendly path for user display
                 frontend_path = source_file_path.replace("../frontend/docs/", "")
 
