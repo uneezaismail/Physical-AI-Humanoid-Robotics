@@ -22,6 +22,9 @@ const config: Config = {
   onBrokenLinks: "warn", // Temporarily warn instead of throw during development
   onBrokenMarkdownLinks: "warn",
 
+  // CRITICAL for Vercel deployment with i18n
+  trailingSlash: false,
+
   // Internationalization (i18n) configuration
   // Supports English (default) and Urdu with RTL layout
   i18n: {

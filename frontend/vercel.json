@@ -1,4 +1,6 @@
 {
+  "buildCommand": "npm run build",
+  "outputDirectory": "build",
   "rewrites": [
     {
       "source": "/api/auth/:match*",
@@ -8,5 +10,7 @@
       "source": "/api/chat/:match*",
       "destination": "https://physical-ai-humanoid-robotics-production.up.railway.app/api/chat/:match*"
     }
-  ]
+  ],
+  "trailingSlash": false,
+  "cleanUrls": true
 }
