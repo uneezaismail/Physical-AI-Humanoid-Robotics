@@ -12,8 +12,11 @@
     padding: 2rem;
     /* New Gradient Background */
     background: linear-gradient(135deg, #02040a 0%, #0a0f29 50%, #150821 100%);
-    overflow: hidden;
+    overflow: hidden; /* Prevent both vertical and horizontal overflow */
+    overflow-x: hidden; /* Explicitly prevent horizontal scroll */
     color: white;
+    width: 100%; /* Ensure section respects viewport width */
+    max-width: 100vw; /* Never exceed viewport width */
 }
 
 /* Background Effects */

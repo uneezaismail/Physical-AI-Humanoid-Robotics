@@ -1,0 +1,222 @@
+/**
+ * RTL (Right-to-Left) Styles for Urdu Language
+ *
+ * This stylesheet applies RTL layout overrides when Docusaurus sets dir="rtl"
+ * on the HTML element (which happens automatically for Urdu locale).
+ *
+ * Key Design Principles:
+ * - Use [dir="rtl"] attribute selector for high specificity
+ * - Code blocks ALWAYS remain LTR (English)
+ * - Sidebar and TOC swap positions
+ * - Text alignment follows natural RTL flow
+ */
+
+/* ============================================================================
+   Sidebar Positioning
+   ============================================================================ */
+
+[dir="rtl"] .theme-doc-sidebar-container {
+  right: 0;
+  left: auto;
+}
+
+[dir="rtl"] .theme-doc-sidebar {
+  border-right: none;
+  border-left: 1px solid var(--ifm-toc-border-color);
+}
+
+/* ============================================================================
+   Table of Contents (TOC) Positioning
+   ============================================================================ */
+
+[dir="rtl"] .theme-doc-toc-desktop {
+  left: 0;
+  right: auto;
+}
+
+[dir="rtl"] .table-of-contents {
+  border-left: none;
+  border-right: 1px solid var(--ifm-toc-border-color);
+}
+
+/* ============================================================================
+   Content Alignment
+   ============================================================================ */
+
+[dir="rtl"] .markdown {
+  text-align: right;
+}
+
+[dir="rtl"] .markdown h1,
+[dir="rtl"] .markdown h2,
+[dir="rtl"] .markdown h3,
+[dir="rtl"] .markdown h4,
+[dir="rtl"] .markdown h5,
+[dir="rtl"] .markdown h6 {
+  text-align: right;
+}
+
+[dir="rtl"] .markdown p,
+[dir="rtl"] .markdown li {
+  text-align: right;
+}
+
+/* ============================================================================
+   Code Blocks - ALWAYS LTR
+   ============================================================================ */
+
+/**
+ * CRITICAL: Code blocks, inline code, and command examples must ALWAYS
+ * remain in LTR (left-to-right) direction, even in RTL context.
+ * This ensures code readability and prevents syntax errors.
+ */
+
+[dir="rtl"] pre,
+[dir="rtl"] code {
+  direction: ltr;
+  text-align: left;
+}
+
+[dir="rtl"] .prism-code {
+  direction: ltr;
+  text-align: left;
+}
+
+[dir="rtl"] .theme-code-block {
+  direction: ltr;
+}
+
+/* ============================================================================
+   Lists
+   ============================================================================ */
+
+[dir="rtl"] ul,
+[dir="rtl"] ol {
+  padding-right: 2rem;
+  padding-left: 0;
+}
+
+[dir="rtl"] .markdown ul,
+[dir="rtl"] .markdown ol {
+  padding-right: 2rem;
+  padding-left: 0;
+}
+
+/* ============================================================================
+   Blockquotes
+   ============================================================================ */
+
+[dir="rtl"] blockquote {
+  border-left: none;
+  border-right: 4px solid var(--ifm-color-emphasis-300);
+  padding-right: 1rem;
+  padding-left: 0;
+}
+
+/* ============================================================================
+   Admonitions (Info/Warning/Danger boxes)
+   ============================================================================ */
+
+[dir="rtl"] .admonition {
+  text-align: right;
+}
+
+[dir="rtl"] .admonition-icon {
+  margin-right: 0;
+  margin-left: var(--ifm-alert-padding-horizontal);
+}
+
+/* ============================================================================
+   Breadcrumbs
+   ============================================================================ */
+
+[dir="rtl"] .breadcrumbs {
+  direction: rtl;
+}
+
+[dir="rtl"] .breadcrumbs__item:not(:last-child):after {
+  content: '\\';
+  margin: 0 var(--ifm-breadcrumb-separator-size);
+}
+
+/* ============================================================================
+   Navbar
+   ============================================================================ */
+
+[dir="rtl"] .navbar__items {
+  flex-direction: row-reverse;
+}
+
+[dir="rtl"] .navbar__item {
+  margin-right: 0;
+  margin-left: var(--ifm-navbar-item-padding-horizontal);
+}
+
+/* ============================================================================
+   Pagination
+   ============================================================================ */
+
+[dir="rtl"] .pagination-nav__link--prev {
+  text-align: right;
+}
+
+[dir="rtl"] .pagination-nav__link--next {
+  text-align: left;
+}
+
+/* ============================================================================
+   Tables
+   ============================================================================ */
+
+[dir="rtl"] table {
+  direction: rtl;
+}
+
+[dir="rtl"] th,
+[dir="rtl"] td {
+  text-align: right;
+}
+
+/* Code within table cells should still be LTR */
+[dir="rtl"] th code,
+[dir="rtl"] td code {
+  direction: ltr;
+  text-align: left;
+}
+
+/* ============================================================================
+   Search
+   ============================================================================ */
+
+[dir="rtl"] .navbar__search-input {
+  text-align: right;
+}
+
+/* ============================================================================
+   Mobile Menu
+   ============================================================================ */
+
+[dir="rtl"] .menu {
+  text-align: right;
+}
+
+[dir="rtl"] .menu__link {
+  padding-right: var(--ifm-menu-link-padding-horizontal);
+  padding-left: 0;
+}
+
+[dir="rtl"] .menu__list-item--collapsed .menu__link--sublist:after {
+  transform: rotateZ(180deg);
+}
+
+/* ============================================================================
+   Footer
+   ============================================================================ */
+
+[dir="rtl"] .footer {
+  text-align: right;
+}
+
+[dir="rtl"] .footer__links {
+  direction: rtl;
+}

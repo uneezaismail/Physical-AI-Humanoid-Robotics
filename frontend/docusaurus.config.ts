@@ -22,12 +22,24 @@ const config: Config = {
   onBrokenLinks: "warn", // Temporarily warn instead of throw during development
   onBrokenMarkdownLinks: "warn",
 
-  // Even if you don't use internationalization, you can use this field to set
-  // useful metadata like html lang. For example, if your site is Chinese, you
-  // may want to replace "en" with "zh-Hans".
+  // Internationalization (i18n) configuration
+  // Supports English (default) and Urdu with RTL layout
   i18n: {
     defaultLocale: "en",
-    locales: ["en"],
+    locales: ["en", "ur"],
+    path: "i18n",
+    localeConfigs: {
+      en: {
+        label: "English",
+        direction: "ltr",
+        htmlLang: "en-US",
+      },
+      ur: {
+        label: "اردو",
+        direction: "rtl", // RIGHT-TO-LEFT for Urdu
+        htmlLang: "ur-PK",
+      },
+    },
   },
 
   // Enable Mermaid diagrams

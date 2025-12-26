@@ -35,6 +35,45 @@ const FloatingChatButton: React.FC = () => {
   const toggleChat = () => {
     setIsOpen(!isOpen);
   };
+
+  // Auto-open chat when text is selected (outside of chat widget)
+  React.useEffect(() => {
+    const handleTextSelection = () => {
+      const selection = window.getSelection();
+      if (!selection || selection.isCollapsed) return;
+
+      const text = selection.toString().trim();
+      if (!text || text.length < 3) return; // Ignore very short selections
+
+      // Check if selection is inside the chat widget
+      let node = selection.anchorNode;
+      if (node && node.nodeType === 3) {
+        node = node.parentNode;
+      }
+
+      // Check if selection is within chat components
+      const chatElements = document.querySelectorAll(
+        '[class*="chatContainer"], [class*="floatingChatWindow"]'
+      );
+      let isInChat = false;
+      chatElements.forEach((chatEl) => {
+        if (chatEl.contains(node as Node)) {
+          isInChat = true;
+        }
+      });
+
+      // If text is selected outside chat and chat is closed, open it
+      if (!isInChat && !isOpen) {
+        setIsOpen(true);
+      }
+    };
+
+    document.addEventListener('mouseup', handleTextSelection);
+    return () => {
+      document.removeEventListener('mouseup', handleTextSelection);
+    };
+  }, [isOpen]);
+
   return (
     <>
       {/* Floating Chat Window */}
