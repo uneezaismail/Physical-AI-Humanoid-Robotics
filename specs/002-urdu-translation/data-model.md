@@ -1,4 +1,4 @@
-# Data Model: Interactive Urdu Translation Button
+# Data Model: Docusaurus Native Urdu Translation
 
 **Date**: 2025-12-18
 **Feature**: 002-urdu-translation
@@ -6,426 +6,357 @@
 
 ## Overview
 
-This document defines the data structures, state management, and entities for the Interactive Urdu Translation Button feature. Since this is a client-side-only feature, the "data model" consists of TypeScript interfaces, React state, and browser storage schemas.
+This document defines the data structures and file organization for the Docusaurus Native Urdu Translation feature. Since this implementation uses Docusaurus's built-in i18n system, there are **no custom data models, state management, or client-side storage**. The "data model" consists entirely of file structure and configuration.
 
 ---
 
 ## Entity Definitions
 
-### 1. Language Preference
+### 1. Locale Configuration
 
-**Description**: User's selected language choice (English or Urdu), persisted across browser sessions.
+**Description**: Docusaurus locale settings that define supported languages and their properties.
 
-**Storage Location**: Browser `localStorage`
+**Storage Location**: `frontend/docusaurus.config.ts` (configuration file)
 
-**TypeScript Interface**:
+**TypeScript Interface** (from `@docusaurus/types`):
 ```typescript
-/**
- * Supported language codes following ISO 639-1 standard
- */
-type LanguageCode = 'en' | 'ur';
+interface I18nConfig {
+  /** Default locale used when no locale prefix in URL */
+  defaultLocale: string;
 
-/**
- * Language preference stored in localStorage
- * Key: 'preferredLanguage'
- * Value: LanguageCode ('en' or 'ur')
- */
-interface LanguagePreference {
-  /** Currently selected language */
-  language: LanguageCode;
+  /** List of all supported locales */
+  locales: string[];
 
-  /** Timestamp when preference was last updated (ISO 8601 string) */
-  lastUpdated: string;
-}
-```
+  /** Directory where i18n translation files are stored */
+  path: string;
 
-**localStorage Schema**:
-```json
-{
-  "key": "preferredLanguage",
-  "value": "ur",  // or "en"
-  "type": "string"
-}
-```
+  /** Configuration for each locale */
+  localeConfigs: {
+    [locale: string]: {
+      /** Display label in language selector */
+      label: string;
 
-**Validation Rules**:
-- Value MUST be either `'en'` or `'ur'`
-- Invalid values fallback to default `'en'`
-- Missing key treated as first-time user → default `'en'`
+      /** Text direction: 'ltr' or 'rtl' */
+      direction: 'ltr' | 'rtl';
 
-**State Transitions**:
-```
-[Initial State: undefined]
-    ↓
-[Load from localStorage or URL parameter]
-    ↓
-[Current State: 'en' | 'ur']
-    ↓
-[User clicks toggle button]
-    ↓
-[New State: opposite of current]
-    ↓
-[Persist to localStorage + Update URL]
-```
+      /** HTML lang attribute value */
+      htmlLang: string;
 
----
+      /** Optional: Calendar system */
+      calendar?: string;
 
-### 2. Translation Button State
-
-**Description**: UI state of the LanguageSwitcher component, including current language, loading status, and availability.
-
-**Storage Location**: React component state
-
-**TypeScript Interface**:
-```typescript
-interface TranslationButtonState {
-  /** Current language being displayed */
-  currentLanguage: LanguageCode;
-
-  /** Whether translation is available for current chapter */
-  translationAvailable: boolean;
-
-  /** Loading state during language switch navigation */
-  isLoading: boolean;
-
-  /** Button disabled state (true if no translation available) */
-  disabled: boolean;
-
-  /** Tooltip/label text to display */
-  label: string;
-}
-```
-
-**Derived Properties**:
-```typescript
-interface DerivedButtonProps {
-  /** Button text based on current language */
-  buttonText: string;  // "Translate to Urdu" or "Translate to English"
-
-  /** Icon to display (language flag or text) */
-  icon: 'EN' | 'UR' | React.ReactNode;
-
-  /** ARIA label for accessibility */
-  ariaLabel: string;  // "Switch to Urdu" or "Switch to English"
-
-  /** Disabled reason (if applicable) */
-  disabledReason?: string;  // "Urdu translation coming soon"
-}
-```
-
-**State Computation Logic**:
-```typescript
-function computeButtonState(
-  currentLanguage: LanguageCode,
-  translationManifest: TranslationManifest,
-  currentDocPath: string
-): TranslationButtonState {
-  const translationAvailable = translationManifest[currentDocPath] === true;
-
-  return {
-    currentLanguage,
-    translationAvailable,
-    isLoading: false,
-    disabled: !translationAvailable && currentLanguage === 'en',
-    label: currentLanguage === 'en' ? 'Translate to Urdu' : 'Translate to English',
+      /** Optional: Path prefix for this locale */
+      path?: string;
+    };
   };
 }
 ```
 
+**Implementation Example**:
+```typescript
+// frontend/docusaurus.config.ts
+i18n: {
+  defaultLocale: "en",
+  locales: ["en", "ur"],
+  path: "i18n",
+  localeConfigs: {
+    en: {
+      label: "English",
+      direction: "ltr",
+      htmlLang: "en-US",
+    },
+    ur: {
+      label: "اردو",
+      direction: "rtl",
+      htmlLang: "ur-PK",
+    },
+  },
+}
+```
+
 ---
 
-### 3. Translation Manifest
+### 2. Translation File Structure
 
-**Description**: Build-time generated mapping of English chapter paths to Urdu translation availability.
+**Description**: Organization of translated content files for each locale.
 
-**Storage Location**: Static JSON file (`src/translation-manifest.json`), imported at build time
+**Storage Location**: `frontend/i18n/<locale>/docusaurus-plugin-content-docs/`
 
-**TypeScript Interface**:
-```typescript
-/**
- * Manifest mapping English doc paths to translation availability
- * Generated at build time by scripts/generate-translation-manifest.js
- */
-interface TranslationManifest {
-  [docPath: string]: boolean;
-}
-
-/**
- * Example manifest structure:
- * {
- *   "chapter-01-foundations/lesson-01-intro.md": true,
- *   "chapter-01-foundations/lesson-02-hardware.md": true,
- *   "chapter-02-ros2/lesson-01-nodes.md": false,
- *   // ... etc
- * }
- */
+**Directory Schema**:
 ```
+frontend/i18n/
+└── ur/                              # Locale code
+    └── docusaurus-plugin-content-docs/
+        ├── current.json             # Sidebar label translations
+        └── current/                 # Translated markdown files
+            ├── part-1-foundations-lab/
+            │   ├── chapter-01-embodied-ai.mdx
+            │   ├── chapter-02-hardware-setup.mdx
+            │   └── chapter-03-physical-ai-architecture.mdx
+            └── part-2-robotic-nervous-system/
+                ├── chapter-04-ros2-architecture.mdx
+                ├── chapter-05-publisher-subscriber.mdx
+                ├── chapter-06-services-actions.mdx
+                ├── chapter-07-parameters-launch.mdx
+                ├── chapter-08-sensor-integration.mdx
+                └── chapter-09-gazebo-simulation.mdx
+```
+
+**Validation Rules**:
+- Directory structure MUST mirror `frontend/docs/` exactly
+- MDX files MUST have identical filenames to English versions
+- Frontmatter fields (title, sidebar_position, etc.) can be translated
+- Code blocks MUST remain in English (not translated)
+
+---
+
+### 3. Sidebar Label Translations
+
+**Description**: JSON file containing translations for sidebar navigation elements.
+
+**Storage Location**: `frontend/i18n/ur/docusaurus-plugin-content-docs/current.json`
 
 **JSON Schema**:
+```typescript
+interface SidebarTranslations {
+  [key: string]: {
+    /** Translated label text */
+    message: string;
+
+    /** English description for translators */
+    description?: string;
+  };
+}
+```
+
+**Implementation Example**:
 ```json
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "type": "object",
-  "patternProperties": {
-    "^[a-z0-9-/]+\\.mdx?$": {
-      "type": "boolean"
-    }
+  "tutorialSidebar": {
+    "message": "رہنمائی سائڈبار",
+    "description": "The label for the docs sidebar"
   },
-  "additionalProperties": false
-}
-```
-
-**Generation Logic** (pseudo-code):
-```typescript
-for each .md file in frontend/docs/:
-  relativePath = file path relative to docs/
-  urduPath = frontend/i18n/ur/docusaurus-plugin-content-docs/current/{relativePath}
-
-  if urduPath exists:
-    manifest[relativePath] = true
-  else:
-    manifest[relativePath] = false
-
-write manifest to src/translation-manifest.json
-```
-
----
-
-### 4. URL Parameter State
-
-**Description**: Language code passed via query string (`?lang=ur`) for sharing language-specific links.
-
-**Storage Location**: Browser URL query parameters (read-only from component perspective)
-
-**TypeScript Interface**:
-```typescript
-interface URLLanguageParams {
-  /** Language code from URL query parameter */
-  lang?: LanguageCode;
-}
-
-/**
- * Parse language from URL query string
- * @returns Language code if valid, null otherwise
- */
-function getLanguageFromURL(): LanguageCode | null {
-  const params = new URLSearchParams(window.location.search);
-  const lang = params.get('lang');
-
-  if (lang === 'en' || lang === 'ur') {
-    return lang;
+  "part-1-foundations-lab": {
+    "message": "حصہ I: بنیادیں اور لیبارٹری",
+    "description": "Part 1 category label"
+  },
+  "chapter-01-embodied-ai": {
+    "message": "باب 1: جسمانی ذہانت",
+    "description": "Chapter 1 sidebar label"
+  },
+  "chapter-02-hardware-setup": {
+    "message": "باب 2: ہارڈویئر سیٹ اپ",
+    "description": "Chapter 2 sidebar label"
   }
-
-  return null;
-}
-```
-
-**URL Format Examples**:
-```
-https://example.com/docs/chapter-01?lang=ur   ← Urdu
-https://example.com/docs/chapter-01?lang=en   ← English
-https://example.com/docs/chapter-01           ← No parameter (use localStorage/default)
-```
-
-**URL Update Logic**:
-```typescript
-function updateURLParameter(newLang: LanguageCode): void {
-  const url = new URL(window.location.href);
-  url.searchParams.set('lang', newLang);
-
-  // Update URL without page reload (pushState)
-  window.history.pushState({}, '', url.toString());
 }
 ```
 
 ---
 
-## State Management Flow
+### 4. URL Structure (Runtime Data Model)
 
-### Initialization Sequence
+**Description**: How Docusaurus maps URLs to locale-specific content at runtime.
 
-```mermaid
-graph TD
-    A[Component Mounts] --> B[Read URL Parameter]
-    B --> C{URL has ?lang=}
-    C -->|Yes| D[Use URL Language]
-    C -->|No| E[Read localStorage]
-    E --> F{localStorage exists?}
-    F -->|Yes| G[Use Stored Language]
-    F -->|No| H[Use Default: en]
-    D --> I[Set Initial State]
-    G --> I
-    H --> I
-    I --> J[Load Translation Manifest]
-    J --> K[Check Translation Available]
-    K --> L[Render Button]
+**Data Flow**:
+```
+User Request: /docs/part-1-foundations-lab/chapter-01-embodied-ai
+    ↓
+Docusaurus Router: Detect locale from URL (no prefix = default locale 'en')
+    ↓
+Content Source: frontend/docs/part-1-foundations-lab/chapter-01-embodied-ai.mdx
+    ↓
+Render: HTML with <html lang="en-US" dir="ltr">
+
+---
+
+User Request: /ur/docs/part-1-foundations-lab/chapter-01-embodied-ai
+    ↓
+Docusaurus Router: Detect locale from URL (prefix '/ur' = Urdu locale)
+    ↓
+Content Source: frontend/i18n/ur/docusaurus-plugin-content-docs/current/part-1-foundations-lab/chapter-01-embodied-ai.mdx
+    ↓
+Fallback (if file missing): frontend/docs/part-1-foundations-lab/chapter-01-embodied-ai.mdx (English content with Urdu URL)
+    ↓
+Render: HTML with <html lang="ur-PK" dir="rtl">
 ```
 
-### Language Switch Flow
+**URL Mapping Table**:
 
-```mermaid
-graph TD
-    A[User Clicks Button] --> B{Translation Available?}
-    B -->|No| C[Button Disabled - No Action]
-    B -->|Yes| D[Determine New Language]
-    D --> E[Update Component State]
-    E --> F[Save to localStorage]
-    F --> G[Update URL Parameter]
-    G --> H[Navigate to New Locale Path]
-    H --> I[Docusaurus Router Handles]
-    I --> J[Page Re-renders in New Language]
+| English URL | Urdu URL | Content Source |
+|-------------|----------|----------------|
+| `/` | `/ur/` | Homepage (English only, no translation) |
+| `/docs/intro` | `/ur/docs/intro` | Docs intro (Urdu if translated, else English) |
+| `/docs/part-1/.../chapter-01` | `/ur/docs/part-1/.../chapter-01` | Chapter 1 (Urdu translation) |
+| `/auth` | `/ur/auth` | Auth page (English only, no translation) |
+
+---
+
+### 5. Build Output Structure
+
+**Description**: Static HTML files generated during build process for each locale.
+
+**Storage Location**: `frontend/build/` and `frontend/build/ur/`
+
+**Build Output Schema**:
 ```
+frontend/build/
+├── index.html                     # Homepage (English)
+├── docs/
+│   ├── intro/
+│   │   └── index.html            # English docs intro
+│   ├── part-1-foundations-lab/
+│   │   ├── chapter-01-embodied-ai/
+│   │   │   └── index.html        # English Chapter 1
+│   │   └── ...
+│   └── ...
+├── auth/
+│   └── index.html                # Auth page (English)
+├── sitemap.xml                   # English sitemap
+└── ur/                           # Urdu locale directory
+    ├── index.html                # Homepage (same as English)
+    ├── docs/
+    │   ├── intro/
+    │   │   └── index.html        # Urdu docs intro
+    │   ├── part-1-foundations-lab/
+    │   │   ├── chapter-01-embodied-ai/
+    │   │   │   └── index.html    # Urdu Chapter 1 (RTL layout)
+    │   │   └── ...
+    │   └── ...
+    ├── auth/
+    │   └── index.html            # Auth page (same as English)
+    └── sitemap.xml               # Urdu sitemap
+```
+
+**HTML Attributes**:
+- English pages: `<html lang="en-US" dir="ltr">`
+- Urdu pages: `<html lang="ur-PK" dir="rtl">`
+- All pages include `<link rel="alternate" hreflang="..." href="...">` tags for SEO
+
+---
+
+## Data Relationships
+
+### Content → Locale Mapping
+
+```
+┌─────────────────────────┐
+│   English Content       │
+│  (source of truth)      │
+│                         │
+│  docs/                  │
+│  ├── chapter-01.mdx     │
+│  └── chapter-02.mdx     │
+└───────────┬─────────────┘
+            │
+            │ Translation Process
+            │ (manual, external to system)
+            ▼
+┌─────────────────────────┐
+│   Urdu Translation      │
+│  (derived content)      │
+│                         │
+│  i18n/ur/.../current/   │
+│  ├── chapter-01.mdx     │
+│  └── chapter-02.mdx     │
+└─────────────────────────┘
+```
+
+### URL → Content Resolution
+
+```
+User Request: /ur/docs/chapter-01
+        │
+        ▼
+┌───────────────────────────┐
+│  Docusaurus Router        │
+│  1. Parse locale: 'ur'    │
+│  2. Parse path: /docs/... │
+└───────┬───────────────────┘
+        │
+        ▼
+┌───────────────────────────────────────┐
+│  Content Plugin (docs)                │
+│  1. Check: i18n/ur/.../chapter-01.mdx │
+│  2. If found: Use Urdu content        │
+│  3. If missing: Fallback to English   │
+└───────┬───────────────────────────────┘
+        │
+        ▼
+┌───────────────────────────┐
+│  Theme Renderer           │
+│  1. Apply locale config   │
+│  2. Set dir="rtl"         │
+│  3. Set lang="ur-PK"      │
+│  4. Render Urdu sidebar   │
+└───────────────────────────┘
+```
+
+---
+
+## State Management
+
+**Question**: Where is application state stored?
+
+**Answer**: **No application state.** This is a pure static site with no client-side state management.
+
+**Rationale**:
+- Language selection is URL-based (state is the URL itself)
+- No localStorage, sessionStorage, or cookies
+- No React Context, Redux, or state libraries
+- Docusaurus handles all routing internally
+
+**What Happens When User Switches Language**:
+1. User clicks localeDropdown → Selects "اردو"
+2. Docusaurus built-in component triggers navigation
+3. Browser navigates to `/ur/docs/...` URL (standard page navigation)
+4. Docusaurus serves pre-built static HTML for Urdu locale
+5. No state updates, no re-renders, no client-side logic
 
 ---
 
 ## Data Validation & Constraints
 
-### Language Code Validation
+### Translation File Validation
 
-```typescript
-/**
- * Type guard to validate language code at runtime
- */
-function isValidLanguageCode(value: unknown): value is LanguageCode {
-  return value === 'en' || value === 'ur';
-}
+**Required Validations** (enforced during build):
+- All translated MDX files must have valid frontmatter
+- Sidebar label keys in `current.json` must match sidebar IDs
+- No circular references in sidebar structure
+- Urdu content must use UTF-8 encoding
 
-/**
- * Safely parse language code with fallback
- */
-function parseLanguageCode(value: unknown, fallback: LanguageCode = 'en'): LanguageCode {
-  return isValidLanguageCode(value) ? value : fallback;
-}
-```
+**Optional Validations** (recommended):
+- Check for untranslated code blocks (should remain English)
+- Verify RTL Unicode characters in Urdu text
+- Validate that English and Urdu files have same structure (headings, sections)
 
-### localStorage Safety
+### Build-Time Checks
 
-```typescript
-/**
- * Safe localStorage access with error handling
- */
-function safeLocalStorageGet(key: string): string | null {
-  try {
-    return localStorage.getItem(key);
-  } catch (error) {
-    // localStorage unavailable (privacy mode, full storage)
-    console.warn(`localStorage.getItem failed for key "${key}":`, error);
-    return null;
-  }
-}
-
-function safeLocalStorageSet(key: string, value: string): boolean {
-  try {
-    localStorage.setItem(key, value);
-    return true;
-  } catch (error) {
-    console.warn(`localStorage.setItem failed for key "${key}":`, error);
-    return false;
-  }
-}
-```
+**Docusaurus Automatic Checks**:
+- Warns if sidebar label translation missing (falls back to English)
+- Errors if MDX syntax invalid
+- Warns if internal links broken (links to untranslated pages)
 
 ---
 
-## Relationships & Dependencies
+## Summary: Simplified Data Model
 
-```mermaid
-erDiagram
-    LanguagePreference ||--o{ TranslationButton : "determines state"
-    TranslationButton ||--|| TranslationManifest : "checks availability"
-    URLParameter ||--o| LanguagePreference : "overrides"
-    TranslationButton ||--|| DocItem : "rendered within"
+Unlike traditional web applications, this feature has **no runtime data model**. All "data" is:
 
-    LanguagePreference {
-        string language
-        string lastUpdated
-    }
+1. **Configuration** (docusaurus.config.ts)
+2. **Files** (MDX content, sidebar JSON)
+3. **URLs** (path-based locale selection)
 
-    TranslationButton {
-        string currentLanguage
-        boolean translationAvailable
-        boolean isLoading
-        boolean disabled
-    }
+**No Need For**:
+- TypeScript interfaces for state
+- Data validation at runtime
+- Client-side storage schemas
+- API contracts or data fetching
 
-    TranslationManifest {
-        map docPath_to_availability
-    }
-
-    URLParameter {
-        string lang
-    }
-```
+This simplicity is the core advantage of using Docusaurus native i18n: **configuration-only, zero custom data management**.
 
 ---
 
-## Performance Considerations
+## References
 
-### State Update Frequency
-- **Language toggle**: Low frequency (user action, ~1-5 times per session)
-- **localStorage read**: Once per page load
-- **URL parameter read**: Once per page load
-- **Manifest lookup**: Once per page load
-
-### Memory Footprint
-- **Translation manifest**: ~1-5 KB JSON (50-100 chapters)
-- **Component state**: Negligible (<1 KB)
-- **localStorage**: 2 bytes (single character 'en' or 'ur')
-
-**Total**: <10 KB additional memory
-
-### Optimization Strategies
-1. **Lazy load manifest**: Import only when component mounts (code splitting)
-2. **Memoization**: Use `useMemo` for derived button properties
-3. **Debounce**: Not needed (single button click, immediate action)
-
----
-
-## Testing Strategy
-
-### Unit Tests
-```typescript
-describe('LanguagePreference', () => {
-  test('parses valid language codes', () => {
-    expect(parseLanguageCode('en')).toBe('en');
-    expect(parseLanguageCode('ur')).toBe('ur');
-  });
-
-  test('falls back to default for invalid codes', () => {
-    expect(parseLanguageCode('fr')).toBe('en');
-    expect(parseLanguageCode(null)).toBe('en');
-  });
-});
-
-describe('TranslationManifest', () => {
-  test('correctly identifies available translations', () => {
-    const manifest = { 'chapter-01/intro.md': true, 'chapter-02/advanced.md': false };
-    expect(manifest['chapter-01/intro.md']).toBe(true);
-    expect(manifest['chapter-02/advanced.md']).toBe(false);
-  });
-});
-```
-
-### Integration Tests
-```typescript
-describe('useLanguagePreference Hook', () => {
-  test('reads from URL parameter first', () => {
-    // Mock URL with ?lang=ur
-    // Verify hook returns 'ur' regardless of localStorage
-  });
-
-  test('falls back to localStorage when no URL parameter', () => {
-    // Mock localStorage with 'ur'
-    // Verify hook returns 'ur'
-  });
-
-  test('persists language change to localStorage', () => {
-    // Call switchLanguage('ur')
-    // Verify localStorage.setItem called with correct value
-  });
-});
-```
-
----
-
-**Summary**: All data entities defined with TypeScript interfaces, validation rules, and state transition logic. Ready for component implementation.
+- [Docusaurus i18n File Structure](https://docusaurus.io/docs/i18n/tutorial#translate-your-site)
+- [Docusaurus Docs Plugin i18n](https://docusaurus.io/docs/api/plugins/@docusaurus/plugin-content-docs#i18n)

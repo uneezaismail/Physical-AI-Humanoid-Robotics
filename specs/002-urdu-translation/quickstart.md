@@ -1,435 +1,465 @@
-# Developer Quickstart: Interactive Urdu Translation Button
+# Developer Quickstart: Docusaurus Native Urdu Translation
 
 **Feature**: 002-urdu-translation
 **Last Updated**: 2025-12-18
 
 ## Overview
 
-This guide provides developers with everything needed to implement the Interactive Urdu Translation Button feature. Follow these steps sequentially for a smooth implementation experience.
+This guide provides developers with everything needed to implement Urdu translation using Docusaurus's built-in i18n system. The implementation requires **zero custom code** - only configuration and translated content files.
 
 ---
 
 ## Prerequisites
 
 - Node.js 18+ installed
-- Familiarity with TypeScript, React, and Docusaurus
+- Familiarity with Docusaurus configuration
 - Project cloned and dependencies installed (`npm install` in `frontend/`)
-- Urdu translations pre-generated (via `urdu-translator` skill) in `frontend/i18n/ur/`
+- Urdu translations ready (MDX files with translated content)
 
 ---
 
 ## Architecture at a Glance
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                    User clicks button                        │
-└──────────────────────┬──────────────────────────────────────┘
-                       │
-                       ▼
-          ┌────────────────────────┐
-          │  LanguageSwitcher.tsx  │
-          │  (React Component)     │
-          └────────┬──────┬────────┘
-                   │      │
-         ┌─────────┘      └─────────┐
-         ▼                          ▼
-┌─────────────────┐        ┌─────────────────┐
-│  localStorage   │        │  Docusaurus     │
-│  (persist pref) │        │  Router         │
-└─────────────────┘        │  (navigate)     │
-                           └────────┬────────┘
-                                    │
-                                    ▼
-                           ┌────────────────┐
-                           │  /ur/docs/...  │
-                           │  (Urdu locale) │
-                           └────────────────┘
+┌──────────────────────────────────────────────────────────┐
+│            User clicks localeDropdown                     │
+│            (built-in Docusaurus component)                │
+└────────────────────┬─────────────────────────────────────┘
+                     │
+                     ▼
+        ┌────────────────────────┐
+        │  Docusaurus Router     │
+        │  (built-in)            │
+        └────────┬───────────────┘
+                 │
+       ┌─────────┴──────────┐
+       │                    │
+       ▼                    ▼
+┌──────────────┐    ┌──────────────┐
+│  /docs/...   │    │  /ur/docs/   │
+│  (English)   │    │  (Urdu+RTL)  │
+└──────────────┘    └──────────────┘
 ```
+
+**Key Points**:
+- No custom React components
+- No state management or localStorage
+- No custom routing logic
+- Pure configuration + content files
 
 ---
 
-## Step-by-Step Implementation
+## Implementation Steps
 
-### Step 1: Configure Docusaurus i18n (5 minutes)
+### Step 1: Configure Docusaurus i18n (2 minutes)
 
 **File**: `frontend/docusaurus.config.ts`
 
-Add Urdu locale to i18n configuration:
+Add the following configuration:
 
 ```typescript
 // frontend/docusaurus.config.ts
-export default {
+import type { Config } from "@docusaurus/types";
+
+const config: Config = {
   // ... existing config
+
+  // CRITICAL for Vercel deployment
+  trailingSlash: false,
+
+  // i18n Configuration
   i18n: {
-    defaultLocale: 'en',
-    locales: ['en', 'ur'],  // Add 'ur' here
-    path: 'i18n',
+    defaultLocale: "en",
+    locales: ["en", "ur"],
+    path: "i18n",
     localeConfigs: {
       en: {
-        label: 'English',
-        direction: 'ltr',
-        htmlLang: 'en-US',
+        label: "English",
+        direction: "ltr",
+        htmlLang: "en-US",
       },
-      ur: {  // NEW: Urdu configuration
-        label: 'اردو',
-        direction: 'rtl',  // RIGHT-TO-LEFT
-        htmlLang: 'ur-PK',
+      ur: {
+        label: "اردو",
+        direction: "rtl",  // Enables automatic RTL layout
+        htmlLang: "ur-PK",
       },
     },
   },
-  // ... rest of config
+
+  // ... existing themeConfig
+  themeConfig: {
+    navbar: {
+      title: "Physical AI & Humanoid Robotics",
+      items: [
+        {
+          type: "docSidebar",
+          sidebarId: "tutorialSidebar",
+          position: "left",
+          label: "Textbook",
+        },
+        {
+          type: "localeDropdown",  // ADD THIS: Built-in language selector
+          position: "right",
+        },
+        {
+          type: "custom-auth-button",
+          position: "right",
+        },
+        // ... other navbar items
+      ],
+    },
+    // ... rest of themeConfig
+  },
 };
+
+export default config;
 ```
 
-**Verify**: Run `npm run start` and check browser console for no i18n errors.
+**What This Does**:
+- Adds Urdu as a supported locale
+- Configures RTL (right-to-left) layout for Urdu
+- Adds language dropdown to navbar
+- Sets `trailingSlash: false` for Vercel compatibility
+
+**Verify**: Run `npm run start` and check that language dropdown appears in navbar (even if no translations exist yet).
 
 ---
 
-### Step 2: Generate Translation Manifest (10 minutes)
+### Step 2: Create Translation Directory Structure (1 minute)
 
-**File**: `scripts/generate-translation-manifest.js` (create new file)
+Create the directory for Urdu translations:
 
-```javascript
-// scripts/generate-translation-manifest.js
-const fs = require('fs');
-const path = require('path');
-
-const docsDir = path.resolve(__dirname, '../frontend/docs');
-const urduDir = path.resolve(__dirname, '../frontend/i18n/ur/docusaurus-plugin-content-docs/current');
-const outputPath = path.resolve(__dirname, '../frontend/src/translation-manifest.json');
-
-const manifest = {};
-
-function scanDocs(dir, basePath = '') {
-  if (!fs.existsSync(dir)) return;
-
-  const files = fs.readdirSync(dir);
-
-  files.forEach(file => {
-    const filePath = path.join(dir, file);
-    const stat = fs.statSync(filePath);
-
-    if (stat.isDirectory()) {
-      scanDocs(filePath, path.join(basePath, file));
-    } else if (file.match(/\.mdx?$/)) {
-      const relativePath = path.join(basePath, file).replace(/\\/g, '/');
-      const urduPath = path.join(urduDir, relativePath);
-      manifest[relativePath] = fs.existsSync(urduPath);
-    }
-  });
-}
-
-scanDocs(docsDir);
-
-fs.writeFileSync(outputPath, JSON.stringify(manifest, null, 2));
-console.log(`✅ Translation manifest generated: ${Object.keys(manifest).length} files mapped`);
-```
-
-**Run**:
 ```bash
-node scripts/generate-translation-manifest.js
+cd frontend
+mkdir -p i18n/ur/docusaurus-plugin-content-docs/current
 ```
 
-**Verify**: Check `frontend/src/translation-manifest.json` exists with chapter paths.
-
----
-
-### Step 3: Create useLanguagePreference Hook (15 minutes)
-
-**File**: `frontend/src/hooks/useLanguagePreference.ts` (create new)
-
-```typescript
-// frontend/src/hooks/useLanguagePreference.ts
-import { useState, useEffect } from 'react';
-import type { LanguageCode } from '../types/i18n';
-
-const STORAGE_KEY = 'preferredLanguage';
-const QUERY_PARAM = 'lang';
-
-export function useLanguagePreference() {
-  const [language, setLanguage] = useState<LanguageCode>('en');
-  const [isLoading, setIsLoading] = useState(true);
-
-  // Initialize from URL → localStorage → default
-  useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const urlLang = urlParams.get(QUERY_PARAM);
-
-    if (urlLang === 'en' || urlLang === 'ur') {
-      setLanguage(urlLang);
-    } else {
-      try {
-        const stored = localStorage.getItem(STORAGE_KEY);
-        if (stored === 'en' || stored === 'ur') {
-          setLanguage(stored);
-        }
-      } catch (e) {
-        console.warn('localStorage unavailable:', e);
-      }
-    }
-
-    setIsLoading(false);
-  }, []);
-
-  const switchLanguage = (newLang: LanguageCode) => {
-    setLanguage(newLang);
-
-    // Persist to localStorage
-    try {
-      localStorage.setItem(STORAGE_KEY, newLang);
-    } catch (e) {
-      console.warn('Failed to save language preference:', e);
-    }
-
-    // Update URL parameter
-    const url = new URL(window.location.href);
-    url.searchParams.set(QUERY_PARAM, newLang);
-    window.history.pushState({}, '', url.toString());
-  };
-
-  return { language, switchLanguage, isLoading };
-}
+**Directory Structure**:
+```
+frontend/i18n/
+└── ur/
+    └── docusaurus-plugin-content-docs/
+        ├── current.json               # Sidebar labels (create next)
+        └── current/                   # Chapter translations (create next)
 ```
 
 ---
 
-### Step 4: Create LanguageSwitcher Component (20 minutes)
+### Step 3: Add Sidebar Label Translations (5 minutes)
 
-**File**: `frontend/src/components/LanguageSwitcher/LanguageSwitcher.tsx`
+**File**: `frontend/i18n/ur/docusaurus-plugin-content-docs/current.json`
 
-```typescript
-// frontend/src/components/LanguageSwitcher/LanguageSwitcher.tsx
-import React from 'react';
-import { useHistory, useLocation } from '@docusaurus/router';
-import { useLanguagePreference } from '@/hooks/useLanguagePreference';
-import translationManifest from '@/translation-manifest.json';
-import styles from './LanguageSwitcher.module.css';
+Create this file with Urdu sidebar labels:
 
-export function LanguageSwitcher() {
-  const { language, switchLanguage } = useLanguagePreference();
-  const history = useHistory();
-  const location = useLocation();
-
-  // Check if translation available for current page
-  const currentDocPath = location.pathname.replace(/^\/?(ur\/)?docs\//, '');
-  const translationAvailable = translationManifest[currentDocPath + '.md'] === true;
-
-  const handleClick = () => {
-    const newLang = language === 'en' ? 'ur' : 'en';
-    switchLanguage(newLang);
-
-    // Navigate to new locale
-    const newPath = newLang === 'ur'
-      ? `/ur${location.pathname}`
-      : location.pathname.replace('/ur', '');
-
-    history.push(newPath);
-  };
-
-  const isDisabled = !translationAvailable && language === 'en';
-  const buttonText = language === 'en' ? 'Translate to Urdu' : 'Translate to English';
-  const tooltip = isDisabled ? 'Urdu translation coming soon' : '';
-
-  return (
-    <button
-      className={styles.languageSwitcher}
-      onClick={handleClick}
-      disabled={isDisabled}
-      title={tooltip}
-      aria-label={buttonText}
-    >
-      {buttonText}
-    </button>
-  );
-}
-```
-
-**File**: `frontend/src/components/LanguageSwitcher/LanguageSwitcher.module.css`
-
-```css
-.languageSwitcher {
-  padding: 8px 16px;
-  font-size: 14px;
-  font-weight: 500;
-  border: 1px solid var(--ifm-color-emphasis-300);
-  border-radius: 4px;
-  background-color: var(--ifm-background-color);
-  color: var(--ifm-font-color-base);
-  cursor: pointer;
-  transition: all 0.2s ease;
-  margin-bottom: 16px;
-}
-
-.languageSwitcher:hover:not(:disabled) {
-  background-color: var(--ifm-color-primary);
-  color: white;
-  border-color: var(--ifm-color-primary);
-}
-
-.languageSwitcher:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-@media (max-width: 768px) {
-  .languageSwitcher {
-    font-size: 12px;
-    padding: 6px 12px;
+```json
+{
+  "tutorialSidebar": {
+    "message": "رہنمائی سائڈبار",
+    "description": "The label for the docs sidebar"
+  },
+  "part-1-foundations-lab": {
+    "message": "حصہ I: بنیادیں اور لیبارٹری",
+    "description": "Part 1 category label"
+  },
+  "chapter-01-embodied-ai": {
+    "message": "باب 1: جسمانی ذہانت",
+    "description": "Chapter 1 sidebar label"
+  },
+  "chapter-02-hardware-setup": {
+    "message": "باب 2: ہارڈویئر سیٹ اپ",
+    "description": "Chapter 2 sidebar label"
+  },
+  "chapter-03-physical-ai-architecture": {
+    "message": "باب 3: فزیکل AI آرکیٹیکچر",
+    "description": "Chapter 3 sidebar label"
+  },
+  "part-2-robotic-nervous-system": {
+    "message": "حصہ II: روبوٹک اعصابی نظام",
+    "description": "Part 2 category label"
+  },
+  "chapter-04-ros2-architecture": {
+    "message": "باب 4: ROS 2 آرکیٹیکچر",
+    "description": "Chapter 4 sidebar label"
+  },
+  "chapter-05-publisher-subscriber": {
+    "message": "باب 5: پبلشر-سبسکرائبر",
+    "description": "Chapter 5 sidebar label"
+  },
+  "chapter-06-services-actions": {
+    "message": "باب 6: سروسز اور ایکشنز",
+    "description": "Chapter 6 sidebar label"
+  },
+  "chapter-07-parameters-launch": {
+    "message": "باب 7: پیرامیٹرز اور لانچ",
+    "description": "Chapter 7 sidebar label"
+  },
+  "chapter-08-sensor-integration": {
+    "message": "باب 8: سینسر انضمام",
+    "description": "Chapter 8 sidebar label"
+  },
+  "chapter-09-gazebo-simulation": {
+    "message": "باب 9: Gazebo سمولیشن",
+    "description": "Chapter 9 sidebar label"
   }
 }
 ```
 
-**File**: `frontend/src/components/LanguageSwitcher/index.ts`
-
-```typescript
-export { LanguageSwitcher } from './LanguageSwitcher';
-```
+**What This Does**: Translates sidebar navigation labels (chapter titles, category names) to Urdu.
 
 ---
 
-### Step 5: Swizzle DocItem Component (10 minutes)
+### Step 4: Add Translated Chapter Content (Varies)
 
-**Run Docusaurus swizzle command**:
+**Directory**: `frontend/i18n/ur/docusaurus-plugin-content-docs/current/`
+
+Mirror the structure of `frontend/docs/` and add translated MDX files.
+
+**Example**: Translating Chapter 1
+
+**English Source** (`frontend/docs/part-1-foundations-lab/chapter-01-embodied-ai.mdx`):
+```mdx
+---
+title: "Chapter 1: Embodied Intelligence"
+sidebar_position: 1
+---
+
+# Chapter 1: Embodied Intelligence
+
+Introduction to embodied AI...
+
+## What is Physical AI?
+
+Physical AI refers to...
+
+```python
+# Example code (keep in English)
+import rclpy
+```
+```
+
+**Urdu Translation** (`frontend/i18n/ur/docusaurus-plugin-content-docs/current/part-1-foundations-lab/chapter-01-embodied-ai.mdx`):
+```mdx
+---
+title: "باب 1: جسمانی ذہانت"
+sidebar_position: 1
+---
+
+# باب 1: جسمانی ذہانت
+
+جسمانی AI کا تعارف...
+
+## فزیکل AI کیا ہے؟
+
+فزیکل AI سے مراد...
+
+```python
+# Example code (keep in English - do NOT translate)
+import rclpy
+```
+```
+
+**Important Rules**:
+1. **Keep Directory Structure Identical**: Urdu files must mirror English structure exactly
+2. **Keep Filenames Identical**: Same filename as English version
+3. **Translate Frontmatter**: Translate `title`, but keep `sidebar_position` value same
+4. **Translate Prose**: Translate paragraphs, headings, lists
+5. **DO NOT Translate Code**: Code blocks remain in English
+6. **DO NOT Translate Paths**: File paths, URLs, command examples stay English
+
+---
+
+### Step 5: Build and Test Locally (5 minutes)
+
+**Build Both Locales**:
 ```bash
 cd frontend
-npm run swizzle @docusaurus/theme-classic DocItem/Layout -- --eject
+npm run build
 ```
 
-**File**: `frontend/src/theme/DocItem/Layout/index.tsx` (modify)
-
-```typescript
-import React from 'react';
-import Layout from '@theme-original/DocItem/Layout';
-import { LanguageSwitcher } from '@/components/LanguageSwitcher';
-
-export default function LayoutWrapper(props) {
-  return (
-    <>
-      <LanguageSwitcher />  {/* INSERT HERE: below title, before content */}
-      <Layout {...props} />
-    </>
-  );
-}
+**Expected Output**:
 ```
+[SUCCESS] Generated static files for "en" locale.
+[SUCCESS] Generated static files for "ur" locale.
+
+Build output:
+  ├── build/          (English)
+  └── build/ur/       (Urdu)
+```
+
+**Preview Locally**:
+```bash
+npx http-server build -p 3000
+```
+
+**Test Checklist**:
+1. Visit `http://localhost:3000/docs/part-1-foundations-lab/chapter-01-embodied-ai`
+2. Click language dropdown (top-right navbar)
+3. Select "اردو" from dropdown
+4. Verify navigation to `/ur/docs/...`
+5. Verify content is in Urdu
+6. Verify RTL layout (sidebar on right, text right-aligned)
+7. Verify code blocks remain in English (LTR)
+8. Click "English" in dropdown to switch back
+9. Verify navigation to `/docs/...` (English version)
 
 ---
 
-### Step 6: Add RTL Styles (5 minutes)
+### Step 6: Configure Vercel Deployment (2 minutes)
 
-**File**: `frontend/src/css/rtl.css` (create new)
+**File**: `frontend/vercel.json` (should contain ONLY API rewrites):
 
-```css
-/* RTL-specific styles for Urdu */
-[dir="rtl"] .theme-doc-sidebar {
-  right: 0;
-  left: auto;
-}
-
-[dir="rtl"] .theme-doc-toc {
-  left: 0;
-  right: auto;
-}
-
-[dir="rtl"] .markdown {
-  text-align: right;
-}
-
-/* Code blocks always LTR */
-[dir="rtl"] pre,
-[dir="rtl"] code {
-  direction: ltr;
-  text-align: left;
+```json
+{
+  "rewrites": [
+    {
+      "source": "/api/auth/:match*",
+      "destination": "https://your-backend.railway.app/api/auth/:match*"
+    },
+    {
+      "source": "/api/chat/:match*",
+      "destination": "https://your-backend.railway.app/api/chat/:match*"
+    }
+  ]
 }
 ```
 
-**Import in** `frontend/src/css/custom.css`:
-```css
-@import './rtl.css';
-```
+**Vercel Dashboard Settings** (configure manually):
+
+1. Go to Vercel project settings
+2. Navigate to "General" → "Build & Development Settings"
+3. Set **Framework Preset**: `Docusaurus (v2+)`
+4. Set **Root Directory**: `frontend`
+5. Leave **Build Command** and **Output Directory** as auto-detected
+6. Save settings
+
+**Why This Matters**:
+- Docusaurus project lives in `frontend/` subdirectory
+- Vercel needs to know where to run `npm install` and `npm run build`
+- Framework Preset enables auto-detection of build commands
 
 ---
 
-### Step 7: Build & Test (10 minutes)
+### Step 7: Deploy and Verify (5 minutes)
 
-**Build translation manifest**:
+**Commit and Push**:
 ```bash
-node scripts/generate-translation-manifest.js
+git add frontend/docusaurus.config.ts frontend/i18n/ frontend/vercel.json
+git commit -m "feat: Add Urdu translation with native Docusaurus i18n"
+git push origin main
 ```
 
-**Start development server**:
-```bash
-cd frontend
-npm run start
-```
+**Wait for Vercel Build** (check deployment logs):
+- Build should succeed for both locales
+- Both `build/` and `build/ur/` directories should be generated
+- No 404 errors
 
-**Test checklist**:
-- [ ] Button appears below chapter title
-- [ ] Clicking button switches language
-- [ ] URL updates with `?lang=ur` parameter
-- [ ] Page navigates to `/ur/docs/...` path
-- [ ] RTL layout active (sidebar on right)
-- [ ] Code blocks remain LTR
-- [ ] Button disabled for untranslated chapters
-- [ ] Tooltip shows "Urdu translation coming soon"
-- [ ] Language persists after browser refresh
+**Production Test Checklist**:
+1. Visit production URL (e.g., `https://your-site.vercel.app`)
+2. Navigate to `/docs/part-1-foundations-lab/chapter-01-embodied-ai`
+3. Click language dropdown → Select "اردو"
+4. Verify Urdu content loads at `/ur/docs/...`
+5. Verify RTL layout
+6. Test direct URL access: Share `/ur/docs/...` link with someone, confirm it works
+7. Test on mobile device
+8. Test in different browsers (Chrome, Firefox, Safari)
 
 ---
 
 ## Troubleshooting
 
-### Issue: Button not appearing
-**Fix**: Verify swizzled `DocItem/Layout/index.tsx` imports LanguageSwitcher correctly. Check browser console for errors.
+### Issue: Language dropdown doesn't appear
 
-### Issue: Translation manifest empty
-**Fix**: Ensure Urdu translation files exist in `frontend/i18n/ur/docusaurus-plugin-content-docs/current/`. Re-run manifest generation script.
+**Cause**: `localeDropdown` not added to navbar
+**Fix**: Check `docusaurus.config.ts` → `themeConfig.navbar.items` → Ensure `{type: "localeDropdown", position: "right"}` exists
+
+---
+
+### Issue: 404 on `/ur/docs/*` URLs in production
+
+**Cause**: Vercel not building Urdu locale
+**Fix**:
+1. Check Vercel Dashboard → Settings → Framework Preset (should be "Docusaurus (v2+)")
+2. Check Vercel Dashboard → Settings → Root Directory (should be "frontend")
+3. Redeploy project
+
+---
+
+### Issue: Urdu content shows English
+
+**Cause**: Translation file missing or path mismatch
+**Fix**:
+1. Verify file exists at `frontend/i18n/ur/docusaurus-plugin-content-docs/current/<path-to-chapter>.mdx`
+2. Verify directory structure mirrors `frontend/docs/` exactly
+3. Verify filename matches English version exactly
+4. Check build logs for fallback warnings
+
+---
 
 ### Issue: RTL layout not working
-**Fix**: Verify `docusaurus.config.ts` has `direction: 'rtl'` in `localeConfigs.ur`. Check browser inspector shows `<html dir="rtl">`.
 
-### Issue: localStorage not persisting
-**Fix**: Check browser privacy settings. Try incognito mode to rule out extensions blocking storage.
-
----
-
-## Testing
-
-Run unit tests:
-```bash
-cd frontend
-npm test -- LanguageSwitcher.test.tsx
-```
-
-Run E2E tests:
-```bash
-npx playwright test language-switching.spec.ts
-```
+**Cause**: Locale direction not set to RTL
+**Fix**: Check `docusaurus.config.ts` → `i18n.localeConfigs.ur.direction` is `"rtl"`
 
 ---
 
-## Next Steps
+### Issue: Code blocks are in Urdu (wrong!)
 
-After implementation complete:
-1. Run `/sp.tasks` to generate task breakdown for implementation
-2. Follow TDD workflow: write tests first, then implementation
-3. Verify all success criteria (SC-001 through SC-008) met
-4. Create PR following git workflow standards
+**Cause**: Translator accidentally translated code
+**Fix**: Edit Urdu MDX file → Restore English code in code blocks (````python` ... ```)
 
 ---
 
-## Key Files Reference
+## Summary
 
-| File | Purpose |
-|------|---------|
-| `docusaurus.config.ts` | i18n configuration |
-| `scripts/generate-translation-manifest.js` | Build-time manifest generation |
-| `src/hooks/useLanguagePreference.ts` | Language state management hook |
-| `src/components/LanguageSwitcher/` | Main button component |
-| `src/theme/DocItem/Layout/index.tsx` | Swizzled component for button injection |
-| `src/css/rtl.css` | RTL layout styles |
-| `src/translation-manifest.json` | Build output (generated) |
+**What You Did**:
+1. ✅ Added `i18n` config to `docusaurus.config.ts` (5 lines)
+2. ✅ Added `localeDropdown` to navbar (4 lines)
+3. ✅ Created `i18n/ur/.../current.json` with sidebar labels (1 file)
+4. ✅ Added translated MDX files (9 chapters)
+5. ✅ Configured Vercel dashboard (2 settings)
+
+**What You Didn't Need**:
+- ❌ No custom React components
+- ❌ No state management hooks
+- ❌ No localStorage logic
+- ❌ No custom routing
+- ❌ No manual RTL CSS
+- ❌ No build scripts
+
+**Total Implementation**: ~30 minutes configuration + translation time
 
 ---
 
-**Estimated Total Time**: ~75 minutes (first-time implementation)
+## Adding More Languages (Future)
 
-**Questions?** Refer to `plan.md`, `research.md`, and `data-model.md` in specs/002-urdu-translation/
+To add another language (e.g., Arabic):
+
+1. Add locale to `docusaurus.config.ts`:
+   ```typescript
+   locales: ["en", "ur", "ar"],
+   localeConfigs: {
+     ar: {
+       label: "العربية",
+       direction: "rtl",
+       htmlLang: "ar-SA",
+     },
+   }
+   ```
+
+2. Create directory:
+   ```bash
+   mkdir -p i18n/ar/docusaurus-plugin-content-docs/current
+   ```
+
+3. Add translated content in `i18n/ar/.../current/`
+4. Build and deploy
+
+That's it! Docusaurus handles the rest.
+
+---
+
+## References
+
+- [Docusaurus i18n Tutorial](https://docusaurus.io/docs/i18n/tutorial)
+- [Docusaurus i18n API](https://docusaurus.io/docs/api/docusaurus-config#i18n)
+- [Vercel Docusaurus Guide](https://vercel.com/guides/deploying-docusaurus-with-vercel)

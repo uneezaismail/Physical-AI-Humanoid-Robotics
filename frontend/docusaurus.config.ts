@@ -133,6 +133,10 @@ const config: Config = {
           "aria-label": "Navigate to textbook chapters",
         },
         {
+          type: "localeDropdown",
+          position: "right",
+        },
+        {
           type: "custom-auth-button",
           position: "right",
         },

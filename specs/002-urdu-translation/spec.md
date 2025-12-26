@@ -1,143 +1,127 @@
-# Feature Specification: Interactive Urdu Translation Button
+# Feature Specification: Docusaurus Native Urdu Translation
 
 **Feature Branch**: `002-urdu-translation`
 **Created**: 2025-12-18
-**Status**: Draft
-**Input**: User description: "write specification for urdu translation in which user can translate the content in Urdu in the chapters by pressing a button at the start of each chapter."
+**Status**: Implemented
+**Approach**: Native Docusaurus i18n with locale paths
+
+## Overview
+
+Implement multilingual support for the Physical AI textbook documentation using Docusaurus's built-in internationalization (i18n) system. The textbook content (docs) will be available in both English and Urdu, while the website UI (homepage, auth, navigation) remains in English only.
 
 ## Clarifications
 
-### Session 2025-12-18
+### Design Decisions
 
-- Q: Which URL sharing behavior should be implemented? → A: Shared URLs include language parameter (`?lang=ur`) - recipients see sender's language choice
-- Q: Where exactly should the translation button be positioned? → A: Below chapter title, before table of contents / content - balances visibility with hierarchy
-- Q: How should the system handle chapters without Urdu translations? → A: Show disabled button with tooltip/message "Urdu translation coming soon" - clear communication, sets expectations
+- **Q**: Should the entire website be translated or just the docs?
+  - **A**: Docs-only translation - homepage, auth pages, and navigation remain English-only. Only the educational content (book chapters) is available in Urdu.
 
-## User Scenarios & Testing *(mandatory)*
+- **Q**: Which i18n approach to use - custom components or native Docusaurus?
+  - **A**: Native Docusaurus i18n with locale paths (`/ur/docs/...`) using built-in `localeDropdown` component. This is the standard, maintainable approach.
 
-<!--
-  IMPORTANT: User stories should be PRIORITIZED as user journeys ordered by importance.
-  Each user story/journey must be INDEPENDENTLY TESTABLE - meaning if you implement just ONE of them,
-  you should still have a viable MVP (Minimum Viable Product) that delivers value.
-  
-  Assign priorities (P1, P2, P3, etc.) to each story, where P1 is the most critical.
-  Think of each story as a standalone slice of functionality that can be:
-  - Developed independently
-  - Tested independently
-  - Deployed independently
-  - Demonstrated to users independently
--->
+- **Q**: Should language preferences auto-redirect users?
+  - **A**: No auto-redirect. Users stay on their current page type when switching languages (homepage stays homepage, docs stay docs). This provides predictable, user-controlled behavior.
 
-### User Story 1 - Quick Chapter Translation (Priority: P1)
+## User Scenarios & Testing
 
-An Urdu-speaking student visits a chapter page and wants to read the content in their native language. They see a translation button positioned directly below the chapter title, click it once, and the entire chapter content instantly switches to Urdu while maintaining all formatting, code examples, and navigation structure.
+### User Story 1 - Access Urdu Documentation (Priority: P1)
 
-**Why this priority**: This is the core functionality that enables Urdu speakers to access educational content in their preferred language, directly addressing the primary user need and delivering immediate value.
-
-**Independent Test**: Can be fully tested by navigating to any chapter, clicking the translation button, and verifying that content displays in Urdu with proper RTL layout and all original formatting preserved. Delivers complete translation experience for a single chapter.
+An Urdu-speaking student wants to read the textbook in their native language. They visit the docs, see the language selector in the navbar, click "اردو (Urdu)", and are taken to the Urdu version of the same chapter with RTL layout and translated content.
 
 **Acceptance Scenarios**:
 
-1. **Given** a user is viewing a chapter in English, **When** they click the "Translate to Urdu" button at the chapter start, **Then** the chapter content displays in Urdu with RTL (right-to-left) text direction
-2. **Given** a user has translated a chapter to Urdu, **When** they click the button again (now showing "Translate to English"), **Then** the content switches back to English with LTR (left-to-right) text direction
-3. **Given** a user translates a chapter to Urdu, **When** they navigate to another chapter, **Then** the new chapter displays in the user's previously selected language (Urdu)
-4. **Given** a chapter contains code blocks, **When** a user switches to Urdu, **Then** the explanatory text is in Urdu but code blocks remain in original English
-5. **Given** a chapter contains images with captions, **When** a user switches to Urdu, **Then** the captions display in Urdu while image paths remain unchanged
+1. **Given** a user is viewing an English chapter at `/docs/part-1/chapter-01`, **When** they click the language dropdown and select "اردو", **Then** they are navigated to `/ur/docs/part-1/chapter-01` with Urdu content and RTL layout
+2. **Given** a user is viewing Urdu docs at `/ur/docs/...`, **When** they navigate between chapters, **Then** they remain in the Urdu locale throughout their browsing
+3. **Given** a user clicks the language dropdown on a docs page, **When** they select English, **Then** they are navigated to the English version of the same chapter at `/docs/...`
+4. **Given** a chapter contains code blocks, **When** displayed in Urdu, **Then** the explanatory text is in Urdu but code remains in English
+5. **Given** a user views Urdu docs, **When** they check the sidebar, **Then** chapter titles and category names display in Urdu
 
 ---
 
-### User Story 2 - Persistent Language Preference (Priority: P2)
+### User Story 2 - Navigate Multilingual Site (Priority: P1)
 
-A user who regularly reads content in Urdu wants their language choice to persist across browsing sessions. When they return to the site days later, their preferred language (Urdu) is automatically applied without needing to re-select it on every visit.
-
-**Why this priority**: Enhances user experience by remembering preferences, reducing friction for returning users, and demonstrating respect for user choices. While valuable, it's secondary to the core translation functionality.
-
-**Independent Test**: Can be tested independently by selecting Urdu, closing the browser, returning to the site, and verifying the language preference persists. Delivers sustained convenience without requiring P1 to be complete.
+A user wants to seamlessly navigate between English and Urdu documentation while maintaining context. The site uses standard URL-based locales (`/ur/`) that work consistently across all browsers and are shareable.
 
 **Acceptance Scenarios**:
 
-1. **Given** a user selects Urdu as their language, **When** they close and reopen their browser, **Then** the site automatically displays in Urdu
-2. **Given** a user has set Urdu as their preference, **When** they visit the site from a different device without logging in, **Then** the site displays in default English (preference is device-specific)
-3. **Given** a user clears their browser data, **When** they revisit the site, **Then** the language preference resets to default English
+1. **Given** a user is on the homepage at `/`, **When** they click the language dropdown, **Then** they see "English" is selected and "اردو" is available
+2. **Given** a user is on the homepage, **When** they select "اردو" from the dropdown, **Then** they stay on the homepage (no redirect), as homepage is English-only
+3. **Given** a user navigates to Textbook from homepage, **When** they had previously selected Urdu, **Then** they see `/ur/docs/...` with Urdu content
+4. **Given** a user receives a shared link to `/ur/docs/part-1/chapter-01`, **When** they open it, **Then** they see the Urdu version regardless of their preference
+5. **Given** a user is on auth page `/auth`, **When** they use the language dropdown, **Then** they remain on `/auth` (auth pages are English-only)
 
 ---
 
-### User Story 3 - Visual Translation State Indication (Priority: P3)
+### User Story 3 - RTL Layout Support (Priority: P2)
 
-A user navigating between chapters wants clear visual feedback about which language is currently active. The translation button displays the current language state ("English" or "اردو") and the action it will perform ("Translate to Urdu" or "Translate to English").
-
-**Why this priority**: Improves usability through clear affordances and reduces confusion, but the basic functionality works without sophisticated visual states. This is a polish feature that enhances but doesn't fundamentally change the experience.
-
-**Independent Test**: Can be tested by observing button state changes during language switches and verifying tooltip/label text updates. Delivers clarity without requiring other stories.
+Urdu readers expect proper right-to-left text direction and mirrored layouts for comfortable reading. The system automatically applies RTL CSS when displaying Urdu content.
 
 **Acceptance Scenarios**:
 
-1. **Given** a chapter is displayed in English, **When** a user hovers over the translation button, **Then** the button shows "Translate to Urdu" or displays Urdu language icon
-2. **Given** a chapter is displayed in Urdu, **When** a user hovers over the translation button, **Then** the button shows "Translate to English" or displays English language icon
-3. **Given** a user clicks the translation button, **When** the content is switching languages, **Then** a loading indicator briefly appears to acknowledge the action
+1. **Given** a user views `/ur/docs/...`, **When** the page loads, **Then** the HTML has `dir="rtl"` and `lang="ur-PK"` attributes
+2. **Given** Urdu docs are displayed, **When** a user reads paragraphs, **Then** text flows right-to-left naturally
+3. **Given** Urdu docs contain lists, **When** displayed, **Then** bullet points appear on the right side of text
+4. **Given** a user switches from Urdu to English, **When** the page loads, **Then** the HTML has `dir="ltr"` and `lang="en-US"` attributes
 
 ---
 
 ### Edge Cases
 
-- What happens when a chapter has not yet been translated to Urdu?
-  - The button appears in a disabled (grayed out, non-clickable) state
-  - A tooltip or inline message displays "Urdu translation coming soon" to set user expectations
-  - This maintains UI consistency (button always present) while clearly communicating translation status
+- **Untranslated Chapters**: If a chapter hasn't been translated yet, the Urdu URL `/ur/docs/...` shows English content (Docusaurus fallback behavior)
+- **Homepage/Auth in Urdu**: Accessing `/ur/` or `/ur/auth` serves English content with Urdu URL (only docs are translated)
+- **Direct URL Access**: Users can directly access `/ur/docs/...` URLs via shared links or bookmarks
+- **SEO Considerations**: Each locale has separate sitemaps and proper `hreflang` tags for search engines
+- **Mobile Devices**: Language dropdown remains accessible and functional on all screen sizes
 
-- How does the system handle partially translated chapters?
-  - The button remains clickable
-  - Translated sections display in Urdu
-  - Untranslated sections remain in English with a subtle indicator
-
-- What happens when a user has JavaScript disabled?
-  - The site should fall back to serving the default language (English)
-  - Optionally, provide a server-side language selection method via query parameter or subdomain
-
-- How does the translation button behave on mobile devices?
-  - The button remains accessible and sized appropriately for touch targets (minimum 44x44px)
-  - On smaller screens, the button may show only an icon with language code (e.g., "UR" / "EN")
-
-- What happens when a user shares a URL while viewing Urdu content?
-  - The shared URL MUST include language preference (e.g., `?lang=ur`) so recipients see the same language as the sender
-  - This ensures consistency when sharing educational content, especially when instructors share specific language versions with students
-
-## Requirements *(mandatory)*
+## Requirements
 
 ### Functional Requirements
 
-- **FR-001**: System MUST display a translation toggle button immediately below the chapter title and before the table of contents or main content (whichever comes first)
-- **FR-002**: System MUST switch all chapter content (headings, paragraphs, lists, captions) to Urdu when the translation button is activated
-- **FR-003**: System MUST preserve right-to-left (RTL) text direction for Urdu content and left-to-right (LTR) for English
-- **FR-004**: System MUST maintain original formatting (markdown structure, code blocks, links, images) during language switching
-- **FR-005**: System MUST NOT translate code blocks, code snippets, or technical command syntax
-- **FR-006**: System MUST NOT translate file paths, URLs, or import statements
-- **FR-007**: System MUST remember the user's language preference across page navigation within the same session
-- **FR-008**: System MUST store the user's language preference locally to persist across browser sessions
-- **FR-009**: System MUST update the button label or icon to reflect the current language and available translation action
-- **FR-010**: System MUST serve pre-translated Urdu content files rather than performing real-time machine translation
-- **FR-011**: System MUST handle chapters without available Urdu translations by displaying a disabled (non-clickable) button with a tooltip or message stating "Urdu translation coming soon"
-- **FR-012**: System MUST update the page's HTML `lang` attribute (e.g., `lang="ur"` or `lang="en"`) when language changes
-- **FR-013**: System MUST update the site's text direction CSS (e.g., `dir="rtl"` or `dir="ltr"`) when language changes
-- **FR-014**: Users MUST be able to switch between languages an unlimited number of times without page reload
-- **FR-015**: System MUST include language preference in shareable URLs via query parameter (e.g., `?lang=ur`), ensuring recipients see the same language as the sender regardless of their stored preference
+- **FR-001**: System MUST use Docusaurus native i18n with locale paths (`/ur/docs/...` for Urdu, `/docs/...` for English)
+- **FR-002**: System MUST display language selector using built-in `localeDropdown` in the navbar
+- **FR-003**: System MUST translate only documentation content (docs plugin), not homepage, auth, or chat pages
+- **FR-004**: System MUST apply RTL text direction (`dir="rtl"`) for all Urdu pages
+- **FR-005**: System MUST preserve code blocks, file paths, and technical syntax in English within Urdu docs
+- **FR-006**: System MUST translate sidebar labels and chapter titles in the Urdu locale
+- **FR-007**: System MUST NOT auto-redirect users to `/ur/` based on stored preferences
+- **FR-008**: System MUST allow users to switch languages via navbar dropdown from any page
+- **FR-009**: System MUST maintain user context when switching languages (same chapter in different locale)
+- **FR-010**: System MUST serve pre-translated Urdu MDX files from `i18n/ur/docusaurus-plugin-content-docs/`
+- **FR-011**: System MUST set appropriate HTML lang attributes (`lang="en-US"` or `lang="ur-PK"`)
+- **FR-012**: System MUST configure Vercel to build and deploy all locales
 
-### Key Entities *(include if feature involves data)*
+### Non-Functional Requirements
 
-- **Chapter**: A single educational unit with title, content sections, code examples, and metadata; exists in both English and Urdu versions
-- **Translation Button**: Interactive UI element with state (active language, available translation), position (chapter start), and behavior (toggle language)
-- **Language Preference**: User setting stored locally, indicating preferred display language (English or Urdu), persisted across sessions
-- **Content File**: Pre-translated markdown file containing chapter content in either English or Urdu, structured identically for seamless switching
+- **NFR-001**: Language switching MUST occur within 2 seconds
+- **NFR-002**: Build process MUST compile both English and Urdu locales in a single deployment
+- **NFR-003**: Urdu URLs MUST be SEO-friendly and crawlable by search engines
+- **NFR-004**: RTL layout MUST render consistently across Chrome, Firefox, Safari, and Edge
+- **NFR-005**: Language dropdown MUST be accessible (keyboard navigable, screen reader compatible)
 
-## Success Criteria *(mandatory)*
+### Key Entities
+
+- **Locale**: Language variant (en, ur) with associated content directory and configuration
+- **Documentation Content**: MDX files organized in `docs/` (English) and `i18n/ur/docusaurus-plugin-content-docs/current/` (Urdu)
+- **Sidebar Configuration**: Navigation structure defined in `current.json` for each locale
+- **Locale Dropdown**: Built-in Docusaurus navbar component for language selection
+
+## Success Criteria
 
 ### Measurable Outcomes
 
-- **SC-001**: Users can switch from English to Urdu (or vice versa) within 2 seconds of clicking the translation button
-- **SC-002**: Language preference persists across browser sessions with 100% reliability for users who don't clear browser data
-- **SC-003**: All translated chapters display with correct RTL layout (sidebar right, content flows RTL) for Urdu without layout breaks
-- **SC-004**: Code blocks and technical syntax remain in English with 100% accuracy across all translated chapters
-- **SC-005**: 95% of users successfully identify and use the translation button on their first chapter visit (measured via usability testing)
-- **SC-006**: Translation switching works consistently across all major browsers (Chrome, Firefox, Safari, Edge) and mobile devices
-- **SC-007**: Shared URLs with language parameters (`?lang=ur`) correctly display content in the specified language for 100% of recipients
-- **SC-008**: Pages load in the user's preferred language without visible flashing or content shifting (< 100ms language detection)
+- **SC-001**: Users can switch between locales via navbar dropdown with < 2 second navigation time
+- **SC-002**: Urdu docs display with correct RTL layout in 100% of translated chapters
+- **SC-003**: Code blocks remain in English across all Urdu translations
+- **SC-004**: Shared Urdu URLs (`/ur/docs/...`) load correctly for 100% of recipients
+- **SC-005**: Language dropdown appears and functions on all page types (homepage, docs, auth)
+- **SC-006**: Build process successfully generates both locales without errors
+- **SC-007**: Sidebar labels and chapter titles display in Urdu for `/ur/docs/...` pages
+- **SC-008**: No auto-redirect behavior - users control navigation explicitly
+
+### Technical Validation
+
+- Verify `docusaurus build` generates both `build/` (English) and `build/ur/` (Urdu)
+- Verify Vercel deployment includes all locale directories
+- Verify `hreflang` tags are present for SEO
+- Verify RTL CSS is applied only to Urdu pages
+- Verify no custom i18n components are needed (pure Docusaurus native)

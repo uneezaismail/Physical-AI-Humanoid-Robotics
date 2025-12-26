@@ -1,4 +1,4 @@
-# Implementation Plan: Interactive Urdu Translation Button
+# Implementation Plan: Docusaurus Native Urdu Translation
 
 **Branch**: `002-urdu-translation` | **Date**: 2025-12-18 | **Spec**: [spec.md](./spec.md)
 **Input**: Feature specification from `/specs/002-urdu-translation/spec.md`
@@ -7,37 +7,38 @@
 
 ## Summary
 
-Enable users to toggle between English and Urdu content via an interactive button positioned below chapter titles. The feature leverages Docusaurus's built-in i18n system with pre-translated Urdu markdown files, implements client-side language switching without page reloads, persists language preference in browser localStorage, and ensures proper RTL (right-to-left) layout for Urdu content. URL parameters (`?lang=ur`) override stored preferences to enable consistent sharing of language-specific content.
+Implement multilingual support for the Physical AI textbook using Docusaurus's built-in internationalization (i18n) system. The feature enables users to access documentation content in both English and Urdu through standard locale-based URL paths (`/docs/...` for English, `/ur/docs/...` for Urdu). Users switch languages via the native `localeDropdown` component in the navbar. Only documentation content (book chapters) is translated; homepage, authentication pages, and UI elements remain in English. Urdu pages automatically apply RTL (right-to-left) layout through Docusaurus's built-in locale configuration.
 
 ## Technical Context
 
 **Language/Version**: TypeScript 5.x (React 18+ via Docusaurus 3.x)
 **Primary Dependencies**:
-- Docusaurus 3.x (static site generator with React)
-- React 18+ (UI components)
-- @docusaurus/theme-classic (theme with i18n support)
-- NEEDS CLARIFICATION: State management approach (React Context vs custom hooks vs library)
+- Docusaurus 3.x (static site generator with native i18n support)
+- React 18+ (UI framework, included with Docusaurus)
+- @docusaurus/theme-classic (provides built-in localeDropdown component)
 
-**Storage**: Browser localStorage for language preference persistence (client-side only, no backend)
-**Testing**: Jest + React Testing Library for component tests, Playwright for E2E translation flow
+**Storage**: No client-side storage required - language selection is URL-based via Docusaurus routing
+**Testing**: Manual verification of locale URLs, RTL layout, and translated content rendering
 **Target Platform**: Modern web browsers (Chrome, Firefox, Safari, Edge) - desktop and mobile
-**Project Type**: Web application (Docusaurus-based static site with React components)
+**Project Type**: Static site with React (Docusaurus)
 **Performance Goals**:
-- Language switch < 2 seconds (SC-001)
-- Page load with preferred language < 100ms detection time (SC-008)
-- No visible content shifting or flashing during language application
+- Language switch < 2 seconds via navbar dropdown (SC-001)
+- RTL layout applies instantly on Urdu page load (SC-002)
+- Build process generates both locales without errors (SC-006)
 
 **Constraints**:
-- Client-side only (static site deployment via GitHub Pages/Vercel)
-- No page reloads during language switching (FR-014)
+- Static site deployment (Vercel)
+- Uses standard Docusaurus i18n patterns (no custom language switching components)
+- Docs-only translation (homepage, auth, navbar, footer remain English)
+- No auto-redirect behavior (user-controlled navigation only)
 - RTL layout must not break existing components
-- Code blocks must remain untranslated with 100% accuracy (SC-004)
+- Code blocks must remain in English with 100% accuracy (SC-003)
 
 **Scale/Scope**:
-- 2 languages (English, Urdu)
-- ~50-100 chapter pages
-- Single translation button component per chapter
-- URL parameter support for language override
+- 2 languages (English as default, Urdu as additional locale)
+- ~50-100 chapter pages (Part 1-5 of textbook)
+- Single `localeDropdown` in navbar for all pages
+- Pre-translated MDX files stored in `i18n/ur/docusaurus-plugin-content-docs/`
 
 ## Constitution Check
 
@@ -45,68 +46,68 @@ Enable users to toggle between English and Urdu content via an interactive butto
 
 ### Principle I: Educational Excellence First
 **Status**: ✅ PASS
-- **Rationale**: Feature enhances educational accessibility by enabling Urdu-speaking learners to access content in their native language. Does not modify educational content structure or quality.
-- **Verification**: Translation button is purely an accessibility/UX feature. Educational content (chapters, code examples, exercises) remains unchanged and maintains quality standards.
+- **Rationale**: Feature enhances educational accessibility by enabling Urdu-speaking learners to access textbook content in their native language. Does not modify educational content structure or quality.
+- **Verification**: Native i18n approach maintains content integrity. Pre-translated Urdu MDX files preserve all educational elements (code examples, diagrams, exercises).
 
 ### Principle II: Technical Accuracy & Verifiability
 **Status**: ✅ PASS
-- **Rationale**: Uses pre-translated Urdu content files (FR-010), ensuring accuracy through manual translation review rather than real-time machine translation.
-- **Verification**: Code blocks remain in English (FR-005, SC-004), preventing translation errors in technical content. All Docusaurus i18n APIs and React patterns follow official documentation.
+- **Rationale**: Uses Docusaurus official i18n system following documented best practices. Pre-translated content files ensure accuracy through manual translation review.
+- **Verification**: Code blocks remain in English (FR-005, SC-003). All locale configuration follows Docusaurus documentation. RTL support uses standard CSS `dir="rtl"` attribute.
 
 ### Principle III: Spec-Driven Development
 **Status**: ✅ PASS
 - **Rationale**: Following standard workflow: spec.md → clarifications → plan.md (current phase) → tasks.md → implementation
-- **Verification**: Specification complete with 3 clarifications resolved. No code written yet. Plan being created before implementation.
+- **Verification**: Specification complete with clarifications resolved (docs-only translation, native approach, no auto-redirect). Plan being created before implementation.
 
 ### Principle IV: Type Safety & Async-First Design
 **Status**: ✅ PASS
-- **Rationale**: TypeScript strict mode already enabled in Docusaurus config. React component will use TypeScript with proper typing.
-- **Verification**: Language preference storage/retrieval will use typed interfaces. No async operations required (client-side localStorage is synchronous).
-- **Note**: Client-side feature - no backend async/await needed.
+- **Rationale**: TypeScript strict mode enabled in Docusaurus config. Native components are fully typed by Docusaurus framework.
+- **Verification**: Locale configuration uses TypeScript types from `@docusaurus/types`. No custom async operations required (Docusaurus handles routing internally).
 
 ### Principle V: Security & Privacy by Design
 **Status**: ✅ PASS
-- **Rationale**: No sensitive data collected. Language preference stored in client-side localStorage (non-sensitive user preference).
-- **Verification**: No API keys, no server communication, no user authentication required. URL parameters are read-only (query string parsing).
+- **Rationale**: No data collection, no localStorage, no cookies. Language selection is purely URL-based. No authentication changes.
+- **Verification**: URLs are public and shareable. No sensitive data in locale paths. Auth system remains unchanged and English-only.
 
 ### Principle VI: Testing & Validation
 **Status**: ✅ PASS (with test plan)
 - **Platform Testing**:
-  - Unit tests: LanguageSwitcher component state management
-  - Integration tests: localStorage persistence, URL parameter parsing
-  - E2E tests: Full language switch flow, RTL layout verification
+  - Verify `/docs/...` URLs serve English content
+  - Verify `/ur/docs/...` URLs serve Urdu content with RTL layout
+  - Test locale switching via navbar dropdown
+  - Verify untranslated chapters fall back to English (Docusaurus default behavior)
 - **Content Validation**:
-  - Verify code blocks remain untranslated (automated check)
-  - Test RTL layout on sample chapters without breaks
+  - Verify code blocks remain in English across all Urdu pages (automated check)
+  - Test RTL layout on all translated chapters
+  - Verify sidebar labels display in Urdu for `/ur/docs/...`
 - **User Experience Validation**:
-  - Mobile responsive: Button touch target ≥ 44x44px
-  - Language switch < 2 seconds (SC-001)
+  - Mobile responsive: localeDropdown accessible on all screen sizes
   - Cross-browser compatibility (Chrome, Firefox, Safari, Edge)
+  - Verify no auto-redirect occurs (users stay on current page type)
 
 ### Principle VII: Progressive Enhancement & Graceful Degradation
 **Status**: ✅ PASS
-- **Rationale**: Feature degrades gracefully if JavaScript disabled (falls back to default English per edge case)
-- **Verification**: Static content remains accessible. Translation button shown only when JavaScript enabled. No runtime errors if localStorage unavailable.
+- **Rationale**: Feature uses standard HTML/CSS (no JavaScript required for core functionality). Docusaurus pre-renders all pages as static HTML.
+- **Verification**: Locale links work without JavaScript (standard `<a>` tags). RTL layout applies via HTML `dir` attribute. Language dropdown degrades to standard navigation menu.
 
 ### Principle VIII: Performance & Scalability
 **Status**: ✅ PASS
-- **Rationale**: Client-side language switching with pre-built static files. No runtime translation overhead.
+- **Rationale**: Static site generation with pre-built locale directories. No runtime translation overhead. Docusaurus optimizes bundle per locale.
 - **Verification**:
-  - < 2 second language switch (SC-001) - client-side DOM update only
-  - < 100ms preference detection (SC-008) - single localStorage read
-  - No impact on Docusaurus build time (pre-translated files built statically)
+  - < 2 second language switch (SC-001) - standard page navigation
+  - Build generates both `build/` (English) and `build/ur/` (Urdu) directories
+  - Vercel serves pre-rendered HTML for both locales
+  - No impact on page load performance
 
 ### Principle IX: Observability & Debugging
-**Status**: ✅ PASS (RESOLVED via Research Phase)
-- **Decision**: Console logging in development mode; optional analytics integration in production
-- **Implementation**: Structured JSON logging in dev, custom GA events in prod (optional)
-- **Resolution**: See research.md Section 6 for detailed logging strategy
-- **Verification**: Development logs help debug localStorage issues, URL parsing, and routing. No PII collected.
+**Status**: ✅ PASS
+- **Rationale**: Docusaurus provides built-in build warnings for missing translations. Browser DevTools show locale routing in Network tab.
+- **Verification**: Build process logs translation fallbacks. HTML source clearly shows `lang` and `dir` attributes. Network requests reveal locale paths.
 
 ### Principle X: Simplicity & Pragmatism (YAGNI)
 **Status**: ✅ PASS
-- **Rationale**: Minimal complexity - single React component, localStorage for persistence, URL parameter parsing. No over-engineering.
-- **Verification**: No unnecessary abstractions. Uses Docusaurus built-in i18n instead of custom translation system. Direct DOM manipulation for RTL switching (standard web pattern).
+- **Rationale**: Zero custom components. Uses Docusaurus built-in i18n with minimal configuration. No over-engineering.
+- **Verification**: Only configuration changes (docusaurus.config.ts), no new React components. No localStorage, no custom hooks, no state management. Pure Docusaurus native patterns.
 
 ## Project Structure
 
@@ -116,53 +117,644 @@ Enable users to toggle between English and Urdu content via an interactive butto
 specs/002-urdu-translation/
 ├── spec.md              # Feature specification (completed)
 ├── plan.md              # This file (implementation plan)
-├── research.md          # Phase 0: Research findings
-├── data-model.md        # Phase 1: Data model (language preference state)
-├── quickstart.md        # Phase 1: Developer quickstart guide
-├── contracts/           # Phase 1: Component API contracts
-│   └── LanguageSwitcher.contract.ts  # TypeScript interface definitions
-└── tasks.md             # Phase 2: Generated by /sp.tasks (NOT created by /sp.plan)
+└── tasks.md             # Phase 2: Generated by /sp.tasks
 ```
 
 ### Source Code (repository root)
 
 ```text
 frontend/
-├── src/
-│   ├── components/
-│   │   ├── LanguageSwitcher/        # NEW: Translation button component
-│   │   │   ├── LanguageSwitcher.tsx
-│   │   │   ├── LanguageSwitcher.module.css
-│   │   │   └── index.ts
-│   │   └── ...
-│   ├── hooks/
-│   │   └── useLanguagePreference.ts  # NEW: Language preference hook
-│   ├── utils/
-│   │   └── i18n.ts                   # NEW: i18n utility functions
-│   ├── theme/
-│   │   └── DocItem/                  # Swizzled Docusaurus component
-│   │       └── index.tsx             # Modified to include LanguageSwitcher
-│   └── css/
-│       └── rtl.css                   # NEW: RTL-specific styles
+├── docusaurus.config.ts        # MODIFIED: Add i18n config and localeDropdown
 ├── i18n/
-│   └── ur/                           # Urdu translations (pre-existing from urdu-translator skill)
-│       ├── code.json
-│       ├── docusaurus-theme-classic/
+│   └── ur/                     # Urdu translations
 │       └── docusaurus-plugin-content-docs/
-│           └── current/              # Translated chapter markdown files
-├── docs/                             # Chapter markdown files (English)
-├── docusaurus.config.ts             # MODIFIED: Add Urdu locale configuration
-└── tests/
-    ├── components/
-    │   └── LanguageSwitcher.test.tsx # Component unit tests
-    └── e2e/
-        └── language-switching.spec.ts # Playwright E2E tests
+│           ├── current.json    # Sidebar labels in Urdu
+│           └── current/        # Translated chapter MDX files
+│               ├── part-1-foundations-lab/
+│               │   ├── chapter-01-embodied-ai.mdx
+│               │   ├── chapter-02-hardware-setup.mdx
+│               │   └── chapter-03-physical-ai-architecture.mdx
+│               └── part-2-robotic-nervous-system/
+│                   ├── chapter-04-ros2-architecture.mdx
+│                   ├── chapter-05-publisher-subscriber.mdx
+│                   ├── chapter-06-services-actions.mdx
+│                   ├── chapter-07-parameters-launch.mdx
+│                   ├── chapter-08-sensor-integration.mdx
+│                   └── chapter-09-gazebo-simulation.mdx
+├── docs/                       # English chapter MDX files (unchanged)
+└── vercel.json                 # MODIFIED: API rewrites only (Root Directory set in Vercel dashboard)
 ```
 
-**Structure Decision**: Web application structure (frontend-only). This is a pure frontend feature built as a React component within the existing Docusaurus static site. No backend modifications required. Component follows Docusaurus theming patterns with swizzled `DocItem` component to inject the translation button below chapter titles.
+**Structure Decision**: Docusaurus native i18n structure. All Urdu content lives in `i18n/ur/docusaurus-plugin-content-docs/` following official Docusaurus documentation. No custom components or theme modifications required. Build process automatically generates locale-specific directories in `build/` and `build/ur/`.
 
 ## Complexity Tracking
 
 > **Fill ONLY if Constitution Check has violations that must be justified**
 
-**No violations detected.** Constitution Check passed 9/10 principles with 1 needs clarification (Principle IX: Observability - logging strategy). All complexity is justified by functional requirements. No YAGNI violations identified.
+**No violations detected.** Constitution Check passed all 10 principles. This is a pure configuration-based feature using Docusaurus built-in i18n with minimal complexity. No custom code required beyond configuration and pre-translated content files.
+
+## Architecture Overview
+
+### Core Design Decisions
+
+**Decision 1: Native Docusaurus i18n vs Custom Translation System**
+- **Chosen Approach**: Native Docusaurus i18n with locale paths
+- **Rationale**:
+  - Official, well-documented, and maintained by Docusaurus team
+  - Built-in RTL support via locale configuration
+  - Automatic SEO optimization (hreflang tags, separate sitemaps)
+  - Zero custom code required
+  - Standard URL structure (`/ur/docs/...`) for shareable links
+- **Alternatives Considered**:
+  - Custom React components with localStorage → Rejected: Over-engineered, non-standard, breaks URL sharing
+  - Runtime translation API → Rejected: Slow, inaccurate for technical content, requires backend
+- **Trade-offs**: Accepted trade-off of requiring manual translation files (benefit: accuracy), cannot dynamically switch language without page navigation (benefit: standard web behavior, SEO-friendly URLs)
+
+**Decision 2: Docs-Only Translation vs Full Site Translation**
+- **Chosen Approach**: Docs-only translation (homepage, auth, UI remain English)
+- **Rationale**:
+  - Educational content (textbook chapters) benefits most from translation
+  - Auth system complexity kept low (single language)
+  - Navbar/footer UI elements are minimal and universally understood
+  - Reduces translation maintenance burden
+  - Clearer user expectation (textbook is multilingual, platform is English)
+- **Alternatives Considered**:
+  - Full site translation → Rejected: Unnecessary complexity, auth UX complications, higher maintenance
+- **Implementation**: Only populate `i18n/ur/docusaurus-plugin-content-docs/`, skip `docusaurus-theme-classic/navbar.json` and other UI translation files
+
+**Decision 3: Language Selection via localeDropdown vs Custom Component**
+- **Chosen Approach**: Built-in `type: 'localeDropdown'` navbar item
+- **Rationale**:
+  - Zero code required (configuration only)
+  - Maintained by Docusaurus (automatic updates, bug fixes)
+  - Accessible by default (keyboard navigation, screen readers)
+  - Consistent with Docusaurus ecosystem
+  - Works on all page types (docs, homepage, auth)
+- **Alternatives Considered**:
+  - Custom LanguageSwitcher component → Rejected: Unnecessary code, accessibility burden, maintenance overhead
+- **Implementation**: Single navbar item in `docusaurus.config.ts`:
+  ```typescript
+  {
+    type: 'localeDropdown',
+    position: 'right',
+  }
+  ```
+
+**Decision 4: No Auto-Redirect vs Auto-Redirect Based on Preference**
+- **Chosen Approach**: No auto-redirect, users control navigation explicitly
+- **Rationale**:
+  - Predictable behavior (users land on the URL they requested)
+  - Shareable URLs work correctly (no localStorage override)
+  - Aligns with web standards (URL is source of truth)
+  - Avoids confusion when sharing links
+  - Respects user intent (if they click English link, show English)
+- **Alternatives Considered**:
+  - Auto-redirect based on localStorage → Rejected: Breaks URL sharing, unpredictable behavior, non-standard
+- **Implementation**: No LocaleRedirect component, no useEffect hooks, pure Docusaurus routing
+
+### System Architecture
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                     Docusaurus Build Process                 │
+│                                                              │
+│  docs/ (English MDX)  ──────────────┐                       │
+│                                      │                       │
+│  i18n/ur/.../current/ (Urdu MDX) ───┼──→ Static Site Gen    │
+│                                      │                       │
+│  docusaurus.config.ts (i18n config)─┘                       │
+│                                                              │
+│  Output:                                                     │
+│  ├── build/                (English pages)                  │
+│  │   ├── index.html                                         │
+│  │   ├── docs/                                              │
+│  │   │   ├── part-1-foundations-lab/                        │
+│  │   │   │   ├── chapter-01-embodied-ai/index.html         │
+│  │   │   │   └── ...                                        │
+│  │   └── ...                                                │
+│  └── build/ur/            (Urdu pages)                      │
+│      ├── index.html       (same as English homepage)        │
+│      ├── docs/                                              │
+│      │   ├── part-1-foundations-lab/                        │
+│      │   │   ├── chapter-01-embodied-ai/index.html (RTL)   │
+│      │   │   └── ...                                        │
+│      └── ...                                                │
+└─────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+                    ┌──────────────────┐
+                    │  Vercel Platform │
+                    │                  │
+                    │  Root Directory: │
+                    │  "frontend"      │
+                    │                  │
+                    │  Framework:      │
+                    │  Docusaurus v2+  │
+                    └──────────────────┘
+                              │
+                              ▼
+        ┌─────────────────────────────────────────┐
+        │         User Browser Requests            │
+        │                                          │
+        │  GET /docs/chapter-01  ──→ English HTML │
+        │  GET /ur/docs/chapter-01 ──→ Urdu HTML  │
+        │  GET /auth ───────────────→ English HTML│
+        │  GET /ur/auth ────────────→ English HTML│
+        │  GET / ───────────────────→ English HTML│
+        │  GET /ur/ ────────────────→ English HTML│
+        └─────────────────────────────────────────┘
+```
+
+### Component Architecture
+
+**No custom components required.** This feature is purely configuration-based.
+
+**Modified Files**:
+1. `frontend/docusaurus.config.ts`:
+   - Add `i18n` configuration block with `en` and `ur` locales
+   - Configure `localeConfigs` with RTL direction for Urdu
+   - Add `localeDropdown` to navbar items
+   - Ensure `trailingSlash: false` for Vercel compatibility
+
+**New Directories**:
+1. `frontend/i18n/ur/docusaurus-plugin-content-docs/`:
+   - `current.json`: Sidebar labels in Urdu
+   - `current/`: Translated MDX files mirroring `docs/` structure
+
+**Docusaurus Built-in Components Used**:
+- `localeDropdown`: Navbar component for language selection
+- Docs plugin: Handles locale-specific content routing
+- Theme: Applies RTL CSS automatically via `dir` attribute
+
+### Data Flow
+
+1. **Build Time**:
+   ```
+   Docusaurus reads docusaurus.config.ts
+   └─→ Detects i18n.locales: ['en', 'ur']
+       └─→ For each locale:
+           ├─→ Reads content from docs/ (en) or i18n/ur/.../current/ (ur)
+           ├─→ Reads sidebar from sidebars.ts (en) or i18n/ur/.../current.json (ur)
+           ├─→ Applies localeConfig (direction: rtl for ur)
+           └─→ Generates static HTML in build/ (en) or build/ur/ (ur)
+   ```
+
+2. **Runtime (User Navigation)**:
+   ```
+   User visits /docs/chapter-01
+   └─→ Docusaurus router serves /docs/chapter-01/index.html (English)
+       └─→ Navbar shows localeDropdown with "English" selected
+           └─→ User clicks dropdown, selects "اردو"
+               └─→ Docusaurus navigates to /ur/docs/chapter-01
+                   └─→ Browser requests /ur/docs/chapter-01/index.html (Urdu + RTL)
+   ```
+
+3. **Fallback Behavior** (Untranslated Content):
+   ```
+   User visits /ur/docs/chapter-10-untranslated
+   └─→ Docusaurus checks i18n/ur/.../current/chapter-10-untranslated.mdx
+       └─→ File not found
+           └─→ Falls back to docs/chapter-10-untranslated.mdx (English content)
+               └─→ Serves English content with Urdu URL and RTL layout
+   ```
+
+## Technical Implementation Details
+
+### Configuration Changes
+
+**File**: `frontend/docusaurus.config.ts`
+
+```typescript
+const config: Config = {
+  // ... existing config
+
+  // CRITICAL for Vercel deployment with i18n
+  trailingSlash: false,
+
+  // Internationalization configuration
+  i18n: {
+    defaultLocale: "en",
+    locales: ["en", "ur"],
+    path: "i18n",
+    localeConfigs: {
+      en: {
+        label: "English",
+        direction: "ltr",
+        htmlLang: "en-US",
+      },
+      ur: {
+        label: "اردو",
+        direction: "rtl",        // RIGHT-TO-LEFT for Urdu
+        htmlLang: "ur-PK",
+      },
+    },
+  },
+
+  themeConfig: {
+    navbar: {
+      title: "Physical AI & Humanoid Robotics",
+      items: [
+        {
+          type: "docSidebar",
+          sidebarId: "tutorialSidebar",
+          position: "left",
+          label: "Textbook",
+        },
+        {
+          type: "localeDropdown",  // Built-in language selector
+          position: "right",
+        },
+        {
+          type: "custom-auth-button",
+          position: "right",
+        },
+        // ... GitHub link
+      ],
+    },
+  },
+};
+```
+
+### Content Structure
+
+**English Content** (baseline):
+```
+frontend/docs/
+├── part-1-foundations-lab/
+│   ├── chapter-01-embodied-ai.mdx
+│   ├── chapter-02-hardware-setup.mdx
+│   └── chapter-03-physical-ai-architecture.mdx
+└── part-2-robotic-nervous-system/
+    └── ... (chapters 04-09)
+```
+
+**Urdu Translations**:
+```
+frontend/i18n/ur/docusaurus-plugin-content-docs/
+├── current.json                           # Sidebar labels
+└── current/
+    ├── part-1-foundations-lab/
+    │   ├── chapter-01-embodied-ai.mdx    # Urdu translation
+    │   ├── chapter-02-hardware-setup.mdx
+    │   └── chapter-03-physical-ai-architecture.mdx
+    └── part-2-robotic-nervous-system/
+        └── ... (chapters 04-09, Urdu)
+```
+
+**Sidebar Labels** (`current.json`):
+```json
+{
+  "tutorialSidebar": {
+    "message": "رہنمائی سائڈبار",
+    "description": "The label for the docs sidebar"
+  },
+  "part-1-foundations-lab": {
+    "message": "حصہ I: بنیادیں اور لیبارٹری",
+    "description": "Part 1 category label"
+  },
+  "chapter-01-embodied-ai": {
+    "message": "باب 1: جسمانی ذہانت",
+    "description": "Chapter 1 sidebar label"
+  }
+  // ... more labels
+}
+```
+
+### Vercel Deployment Configuration
+
+**File**: `frontend/vercel.json`
+
+```json
+{
+  "rewrites": [
+    {
+      "source": "/api/auth/:match*",
+      "destination": "https://[backend-url]/api/auth/:match*"
+    },
+    {
+      "source": "/api/chat/:match*",
+      "destination": "https://[backend-url]/api/chat/:match*"
+    }
+  ]
+}
+```
+
+**Vercel Dashboard Settings** (configured manually):
+- **Framework Preset**: Docusaurus (v2+)
+- **Root Directory**: `frontend`
+- **Build Command**: Auto-detected (`npm run build`)
+- **Output Directory**: Auto-detected (`build`)
+
+**Why Root Directory Matters**:
+- Docusaurus project lives in `frontend/` subdirectory of monorepo
+- Vercel needs to know to run `npm install` and `npm run build` from `frontend/`
+- Without this setting, build fails (cannot find `package.json`)
+
+### RTL Layout Implementation
+
+**Automatic via Docusaurus**:
+- When locale `direction: "rtl"` is set, Docusaurus automatically:
+  - Adds `dir="rtl"` to `<html>` element on Urdu pages
+  - Applies RTL CSS transformations to theme components
+  - Mirrors layout (sidebar, navbar, TOC) automatically
+  - Preserves LTR direction for code blocks
+
+**No Custom CSS Required**:
+- Docusaurus theme handles all RTL styling
+- Text alignment, padding, margins, flex directions automatically flipped
+- Mixed-direction content (Arabic text + English code) works out of the box
+
+### URL Structure & Routing
+
+**English (Default Locale)**:
+```
+/                           → Homepage (English)
+/docs/intro                 → Docs intro (English)
+/docs/part-1/.../chapter-01 → Chapter 1 (English)
+/auth                       → Auth page (English)
+```
+
+**Urdu Locale**:
+```
+/ur/                        → Homepage (English, not translated)
+/ur/docs/intro              → Docs intro (Urdu if translated, else English)
+/ur/docs/part-1/.../chapter-01 → Chapter 1 (Urdu + RTL)
+/ur/auth                    → Auth page (English, not translated)
+```
+
+**Behavior**:
+- `/ur/*` URLs without docs content serve English content (homepage, auth remain English-only)
+- Only `/ur/docs/*` URLs serve Urdu content
+- No redirects between locales (URL is source of truth)
+- `localeDropdown` provides navigation between corresponding pages
+
+## Risk Analysis & Mitigation
+
+### Risk 1: Incomplete Urdu Translations
+**Likelihood**: Medium | **Impact**: Low | **Severity**: 🟡 LOW-MEDIUM
+
+**Description**: Some chapters may not have Urdu translations initially, leading to mixed English/Urdu experience.
+
+**Mitigation**:
+- Docusaurus automatically falls back to English content for untranslated files
+- Users see English content on Urdu URLs (still readable, just not translated)
+- Translation can be incremental (add Urdu files as they're ready)
+- Sidebar labels can indicate translation status (optional)
+
+**Detection**: Build process logs fallback warnings for missing translations
+
+**Rollback**: N/A (graceful degradation, no breaking changes)
+
+---
+
+### Risk 2: RTL Layout Breaking Custom Components
+**Likelihood**: Low | **Impact**: Medium | **Severity**: 🟡 LOW-MEDIUM
+
+**Description**: Custom components (FloatingChatButton, AuthModal) may not render correctly with RTL layout.
+
+**Mitigation**:
+- Test all custom components on `/ur/docs/*` pages
+- Apply CSS fixes with `[dir="rtl"]` selectors if needed
+- Most modern CSS (Flexbox, Grid) handles RTL automatically
+- Auth pages remain English-only (not affected by RTL)
+
+**Detection**: Manual visual testing on Urdu pages
+
+**Rollback**: Add `direction: ltr !important;` to specific components if RTL breaks them
+
+---
+
+### Risk 3: Vercel Build Failures for Urdu Locale
+**Likelihood**: Low | **Impact**: High | **Severity**: 🟠 MEDIUM-HIGH
+
+**Description**: Vercel may fail to build Urdu locale if Root Directory not configured correctly.
+
+**Mitigation**:
+- Explicitly set Framework: "Docusaurus (v2+)" and Root Directory: "frontend" in Vercel dashboard
+- Test build locally with `cd frontend && npm run build` before deploying
+- Verify both `build/` and `build/ur/` directories are generated
+
+**Detection**: Vercel build logs, 404 errors on `/ur/docs/*` URLs in production
+
+**Rollback**:
+1. Check Vercel project settings (Framework and Root Directory)
+2. Re-deploy with correct settings
+3. If issue persists, temporarily disable Urdu locale in `docusaurus.config.ts`
+
+---
+
+### Risk 4: SEO Duplication Issues
+**Likelihood**: Very Low | **Impact**: Low | **Severity**: 🟢 LOW
+
+**Description**: Search engines may see English and Urdu pages as duplicate content.
+
+**Mitigation**:
+- Docusaurus automatically adds `hreflang` tags linking English/Urdu versions
+- Separate sitemaps for each locale (`sitemap.xml`, `ur/sitemap.xml`)
+- `lang` attribute on HTML correctly identifies language
+- Google treats different languages as distinct content (not duplicates)
+
+**Detection**: Google Search Console (monitor index status)
+
+**Rollback**: N/A (Docusaurus handles this automatically)
+
+## Success Metrics & Validation
+
+### Build-Time Validation
+
+**Checklist**:
+- [ ] `npm run build` completes without errors
+- [ ] Both `build/` and `build/ur/` directories exist
+- [ ] Translated MDX files appear in `build/ur/docs/`
+- [ ] Sidebar JSON is processed correctly (no missing labels)
+- [ ] No broken links in either locale
+
+**Automated Checks**:
+```bash
+# Verify build outputs
+test -d frontend/build && test -d frontend/build/ur
+echo "✓ Both locales built successfully"
+
+# Check for Urdu content
+ls frontend/build/ur/docs/part-1-foundations-lab/chapter-01-embodied-ai/index.html
+echo "✓ Urdu chapter pages generated"
+```
+
+### Runtime Validation
+
+**Manual Test Cases**:
+
+1. **Language Switching (SC-001)**:
+   - Visit `/docs/part-1-foundations-lab/chapter-01-embodied-ai`
+   - Click localeDropdown → Select "اردو"
+   - Verify navigation to `/ur/docs/part-1-foundations-lab/chapter-01-embodied-ai`
+   - Verify content is in Urdu
+   - **Expected**: < 2 second navigation time
+
+2. **RTL Layout (SC-002)**:
+   - Visit any `/ur/docs/*` URL
+   - Open DevTools → Check `<html dir="rtl" lang="ur-PK">`
+   - Verify text flows right-to-left
+   - Verify sidebar appears on right side
+   - **Expected**: 100% of Urdu pages have RTL layout
+
+3. **Code Blocks Preservation (SC-003)**:
+   - Visit `/ur/docs/part-2-robotic-nervous-system/chapter-04-ros2-architecture`
+   - Inspect Python code blocks
+   - Verify code is in English (not translated)
+   - **Expected**: All code blocks remain in English
+
+4. **Shareable URLs (SC-004)**:
+   - Copy `/ur/docs/*` URL from browser
+   - Open in incognito/private window
+   - Verify Urdu content loads correctly
+   - **Expected**: Direct URL access works 100% of time
+
+5. **Homepage/Auth Remains English**:
+   - Visit `/ur/`
+   - Verify homepage content is in English
+   - Visit `/ur/auth`
+   - Verify auth page is in English
+   - **Expected**: Non-docs pages remain English-only
+
+6. **Sidebar Labels in Urdu (SC-007)**:
+   - Visit `/ur/docs/*`
+   - Check sidebar navigation
+   - Verify chapter titles are in Urdu
+   - Verify category labels are in Urdu
+   - **Expected**: All sidebar labels display in Urdu
+
+### Performance Validation
+
+**Metrics**:
+- Language switch time: < 2 seconds (SC-001)
+- Page load time: No degradation vs English pages
+- Build time: < 2x increase with Urdu locale added
+
+**How to Measure**:
+```bash
+# Build time comparison
+time npm run build  # With Urdu locale
+# vs
+time npm run build  # English only (baseline)
+
+# Page load time (Chrome DevTools Network tab)
+# Compare /docs/chapter-01 vs /ur/docs/chapter-01
+```
+
+## Dependencies & Assumptions
+
+### External Dependencies
+
+1. **Docusaurus 3.x**:
+   - Native i18n support with locale paths
+   - Built-in `localeDropdown` component
+   - Automatic RTL layout handling
+   - **Risk**: Breaking changes in future versions (low risk, stable API)
+
+2. **Vercel Platform**:
+   - Static site hosting with automatic locale detection
+   - Root Directory configuration support
+   - **Requirement**: Must set Framework and Root Directory in dashboard
+
+3. **Pre-Translated Content**:
+   - Urdu MDX files must exist in `i18n/ur/.../current/`
+   - Sidebar labels must exist in `current.json`
+   - **Assumption**: Translation work is done separately (not part of this feature)
+
+### Assumptions
+
+1. **English as Source of Truth**:
+   - All new chapters written in English first
+   - Urdu translations updated after English content stabilizes
+   - If Urdu translation missing, English content is acceptable fallback
+
+2. **Docs-Only Translation Scope**:
+   - Homepage remains English-only (accepted by users)
+   - Auth system remains English-only (simplifies security)
+   - Navbar/footer UI elements remain English (minimal impact)
+
+3. **No Dynamic Language Switching**:
+   - Language selection requires page navigation (Docusaurus standard)
+   - No client-side content swapping (not needed for static site)
+
+4. **Modern Browser Support**:
+   - RTL layout works in all modern browsers (Chrome, Firefox, Safari, Edge)
+   - No IE11 support required (standard Docusaurus assumption)
+
+5. **Vercel Deployment**:
+   - Project continues using Vercel (not switching to Netlify, GitHub Pages, etc.)
+   - Vercel configuration via dashboard (not vercel.json build commands)
+
+## Rollout Plan
+
+### Phase 1: Configuration & Initial Translations
+**Deliverables**:
+- Update `docusaurus.config.ts` with i18n config and localeDropdown
+- Add `trailingSlash: false` for Vercel compatibility
+- Populate `i18n/ur/docusaurus-plugin-content-docs/current.json` with sidebar labels
+- Translate at least 3 chapters (Part 1: Chapters 1-3) to validate system
+
+**Validation**:
+- Local build (`npm run build`) succeeds
+- Both `build/` and `build/ur/` directories created
+- Urdu chapters render correctly in local preview
+
+**Rollback**: Remove i18n config, delete `i18n/ur/` directory
+
+---
+
+### Phase 2: Full Translation & Vercel Deployment
+**Deliverables**:
+- Complete all Urdu translations (Chapters 1-9 across Part 1-2)
+- Configure Vercel dashboard: Framework "Docusaurus (v2+)", Root Directory "frontend"
+- Deploy to production
+- Test all `/ur/docs/*` URLs in production
+
+**Validation**:
+- All Urdu URLs return 200 status (no 404s)
+- RTL layout displays correctly in production
+- Language switching works via navbar dropdown
+
+**Rollback**:
+1. Revert `docusaurus.config.ts` to remove i18n config
+2. Redeploy (Vercel automatically rebuilds English-only site)
+
+---
+
+### Phase 3: Monitoring & Iteration
+**Deliverables**:
+- Monitor Vercel analytics for `/ur/docs/*` traffic
+- Collect user feedback on translation quality
+- Add remaining Urdu chapters as translations become available
+
+**Validation**:
+- No 404 errors on Urdu URLs
+- No user-reported RTL layout issues
+- Incremental translation updates deploy successfully
+
+**Rollback**: N/A (gradual improvement, no breaking changes)
+
+## Open Questions & Follow-ups
+
+### Resolved via Spec Clarifications
+
+✅ **Q1: Should the entire website be translated or just docs?**
+- **Answer**: Docs-only translation (spec clarification)
+
+✅ **Q2: Which i18n approach to use?**
+- **Answer**: Native Docusaurus i18n with localeDropdown (spec clarification)
+
+✅ **Q3: Should language preferences auto-redirect users?**
+- **Answer**: No auto-redirect, user-controlled navigation (spec clarification)
+
+### No Open Questions Remaining
+
+All architectural decisions resolved. Implementation ready to proceed to task generation phase.
+
+## References
+
+- [Docusaurus i18n Official Guide](https://docusaurus.io/docs/i18n/introduction)
+- [Docusaurus i18n Tutorial](https://docusaurus.io/docs/i18n/tutorial)
+- [Vercel Docusaurus Deployment Guide](https://vercel.com/guides/deploying-docusaurus-with-vercel)
+- Project spec: `specs/002-urdu-translation/spec.md`

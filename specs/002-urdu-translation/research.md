@@ -1,4 +1,4 @@
-# Research Findings: Interactive Urdu Translation Button
+# Research Findings: Docusaurus Native Urdu Translation
 
 **Date**: 2025-12-18
 **Feature**: 002-urdu-translation
@@ -6,349 +6,251 @@
 
 ## Overview
 
-This document consolidates research findings to resolve all "NEEDS CLARIFICATION" items identified in the Technical Context section of plan.md. All decisions are based on Docusaurus official documentation, React best practices, and project constitution principles.
+This document consolidates research findings for implementing multilingual support using Docusaurus's built-in internationalization (i18n) system. All decisions are based on Docusaurus official documentation, web standards, and project constitution principles.
 
 ---
 
 ## Research Items
 
-### 1. State Management Approach
+### 1. i18n System Selection
 
-**Question**: React Context vs custom hooks vs external library for language preference state management?
+**Question**: Custom translation system vs Docusaurus native i18n?
 
-**Decision**: Custom React Hook (`useLanguagePreference`)
+**Decision**: Docusaurus Native i18n
 
 **Rationale**:
-- **Simplicity**: Language preference is simple client-side state (current language + localStorage sync). No complex state tree or global updates needed.
-- **Performance**: Single source of truth (localStorage + URL parameter). No unnecessary re-renders from Context provider updates.
-- **Docusaurus Patterns**: Docusaurus uses hooks for client-side state (e.g., `useColorMode`, `useDocusaurusContext`). Following established patterns.
-- **YAGNI Compliance**: No need for Redux/Zustand for 2-language toggle. Custom hook is 50-100 lines vs 200+ for Context provider setup.
+- **Official Support**: Docusaurus provides a complete, well-documented i18n system that is actively maintained by the core team.
+- **Zero Custom Code**: No custom React components, hooks, or state management required. Pure configuration.
+- **SEO Optimization**: Automatic generation of `hreflang` tags, separate sitemaps per locale, and proper `lang` attributes.
+- **RTL Support**: Built-in RTL layout via locale configuration (`direction: "rtl"`). Docusaurus theme automatically handles text direction, sidebar mirroring, and layout transformations.
+- **URL-Based Language Selection**: Standard web pattern (`/docs/...` for English, `/ur/docs/...` for Urdu). Shareable, bookmarkable, and predictable.
+- **YAGNI Compliance**: Simplest possible solution. No over-engineering.
 
 **Alternatives Considered**:
-1. **React Context**: Rejected - overkill for single preference value. Adds provider wrapper complexity and potential re-render issues.
-2. **External Library (Zustand/Redux)**: Rejected - violates YAGNI principle. Adds dependency for 2-state toggle (English/Urdu).
-3. **Docusaurus Plugin**: Rejected - i18n already built-in. We're adding UI layer, not replacing i18n system.
+1. **Custom React Components with localStorage**: Rejected - Over-engineered, breaks URL sharing, non-standard, higher maintenance burden.
+2. **Runtime Translation API (e.g., Google Translate)**: Rejected - Slow, inaccurate for technical content, requires backend, violates accuracy principles.
+3. **Docusaurus Plugin Development**: Rejected - i18n already built-in, would duplicate existing functionality.
 
 **Implementation Pattern**:
 ```typescript
-export function useLanguagePreference() {
-  const [language, setLanguage] = useState<'en' | 'ur'>('en');
-
-  // Read from URL parameter → localStorage → default
-  useEffect(() => {
-    const urlLang = new URLSearchParams(window.location.search).get('lang');
-    const storedLang = localStorage.getItem('preferredLanguage');
-    const initialLang = urlLang || storedLang || 'en';
-    setLanguage(initialLang as 'en' | 'ur');
-  }, []);
-
-  // Persist to localStorage + update URL
-  const switchLanguage = (newLang: 'en' | 'ur') => {
-    setLanguage(newLang);
-    localStorage.setItem('preferredLanguage', newLang);
-    // Update URL without reload
-    const url = new URL(window.location.href);
-    url.searchParams.set('lang', newLang);
-    window.history.pushState({}, '', url);
-  };
-
-  return { language, switchLanguage };
-}
-```
-
----
-
-### 2. Docusaurus i18n Integration Approach
-
-**Question**: How to integrate custom language switcher with Docusaurus's built-in i18n system?
-
-**Decision**: Swizzle `DocItem` component + manual locale switching via Docusaurus Router
-
-**Rationale**:
-- **Docusaurus i18n Architecture**: Docusaurus builds separate static sites for each locale (`/` for English, `/ur/` for Urdu). Language "switching" is navigation between these paths.
-- **Component Swizzling**: Official Docusaurus pattern for customizing theme components. Swizzling `DocItem` allows injecting LanguageSwitcher below title without modifying core theme.
-- **Router Integration**: Use `@docusaurus/router`'s `useHistory` to navigate between `/docs/chapter` and `/ur/docs/chapter` paths.
-
-**Implementation Pattern**:
-```typescript
-import { useHistory, useLocation } from '@docusaurus/router';
-
-function LanguageSwitcher() {
-  const history = useHistory();
-  const location = useLocation();
-  const { language, switchLanguage } = useLanguagePreference();
-
-  const handleToggle = () => {
-    const newLang = language === 'en' ? 'ur' : 'en';
-    switchLanguage(newLang);
-
-    // Navigate to equivalent page in other locale
-    const currentPath = location.pathname;
-    const newPath = newLang === 'ur'
-      ? `/ur${currentPath}`
-      : currentPath.replace('/ur', '');
-
-    history.push(newPath);
-  };
-
-  return <button onClick={handleToggle}>...</button>;
-}
-```
-
-**Alternatives Considered**:
-1. **Real-time Content Swapping**: Rejected - violates Docusaurus architecture. Would require fetching markdown, re-parsing, and DOM replacement. Complex and error-prone.
-2. **iframe Embedding**: Rejected - accessibility nightmare, SEO issues, breaks navigation.
-3. **Custom Plugin**: Rejected - unnecessary when swizzling achieves same result with less code.
-
-**Documentation Reference**:
-- [Docusaurus Swizzling Guide](https://docusaurus.io/docs/swizzling)
-- [Docusaurus i18n Tutorial](https://docusaurus.io/docs/i18n/tutorial)
-
----
-
-### 3. RTL Layout Implementation Strategy
-
-**Question**: How to apply RTL (right-to-left) layout for Urdu without breaking English layout?
-
-**Decision**: CSS custom properties + `[dir="rtl"]` attribute selector
-
-**Rationale**:
-- **Docusaurus i18n Support**: Docusaurus automatically sets `<html dir="rtl">` for RTL locales when configured in `localeConfigs`.
-- **CSS Cascade**: Use attribute selector `[dir="rtl"]` to override styles only when Urdu active. No JavaScript DOM manipulation needed.
-- **Specificity**: Attribute selector has higher specificity than class selectors, ensuring RTL overrides apply correctly.
-
-**Implementation Pattern**:
-
-**docusaurus.config.ts**:
-```typescript
-i18n: {
-  defaultLocale: 'en',
-  locales: ['en', 'ur'],
-  localeConfigs: {
-    en: {
-      label: 'English',
-      direction: 'ltr',
-      htmlLang: 'en-US',
-    },
-    ur: {
-      label: 'اردو',
-      direction: 'rtl',  // CRITICAL: Docusaurus sets dir="rtl" automatically
-      htmlLang: 'ur-PK',
+// frontend/docusaurus.config.ts
+const config: Config = {
+  i18n: {
+    defaultLocale: "en",
+    locales: ["en", "ur"],
+    localeConfigs: {
+      en: {
+        label: "English",
+        direction: "ltr",
+        htmlLang: "en-US",
+      },
+      ur: {
+        label: "اردو",
+        direction: "rtl",  // Automatic RTL layout
+        htmlLang: "ur-PK",
+      },
     },
   },
-},
+};
 ```
 
-**frontend/src/css/rtl.css**:
-```css
-/* RTL-specific overrides - only apply when dir="rtl" */
-[dir="rtl"] .theme-doc-sidebar {
-  right: 0;
-  left: auto;
-}
+---
 
-[dir="rtl"] .theme-doc-toc {
-  left: 0;
-  right: auto;
-}
+### 2. Language Selection UI
 
-[dir="rtl"] .markdown {
-  text-align: right;
-}
+**Question**: Custom language switcher component vs built-in localeDropdown?
 
-/* Code blocks remain LTR even in RTL context */
-[dir="rtl"] pre,
-[dir="rtl"] code {
-  direction: ltr;
-  text-align: left;
-}
-```
+**Decision**: Built-in `localeDropdown` Navbar Item
+
+**Rationale**:
+- **Zero Code Required**: Configuration-only (add navbar item in `docusaurus.config.ts`).
+- **Maintained by Docusaurus**: Automatic updates, bug fixes, and accessibility improvements.
+- **Accessible by Default**: Keyboard navigation, screen reader support, ARIA labels handled automatically.
+- **Consistent UX**: Follows Docusaurus ecosystem patterns, familiar to users of other Docusaurus sites.
+- **Works Everywhere**: Appears on all page types (docs, homepage, auth) without custom integration logic.
 
 **Alternatives Considered**:
-1. **JavaScript DOM Manipulation**: Rejected - CSS is declarative and faster. No need for runtime DOM queries.
-2. **Separate CSS Files**: Rejected - harder to maintain. Single file with `[dir="rtl"]` selector is clearer.
-3. **CSS-in-JS**: Rejected - Docusaurus uses CSS modules. Adding styled-components increases bundle size unnecessarily.
+1. **Custom LanguageSwitcher Component**: Rejected - Unnecessary code, accessibility burden, maintenance overhead, violates YAGNI.
+2. **Language Buttons in Footer**: Rejected - Poor discoverability, not standard pattern.
+3. **Browser Language Detection + Auto-Redirect**: Rejected - Breaks URL sharing, confusing UX, non-standard.
 
-**Documentation Reference**:
-- [MDN: CSS dir attribute selector](https://developer.mozilla.org/en-US/docs/Web/CSS/:dir)
+**Implementation Pattern**:
+```typescript
+// frontend/docusaurus.config.ts
+themeConfig: {
+  navbar: {
+    items: [
+      {
+        type: "localeDropdown",  // Built-in component
+        position: "right",
+      },
+    ],
+  },
+}
+```
+
+---
+
+### 3. Translation Scope
+
+**Question**: Translate entire site or docs-only?
+
+**Decision**: Docs-Only Translation
+
+**Rationale**:
+- **Educational Focus**: Textbook chapters benefit most from translation. Homepage, auth, and UI elements are minimal and universally understood.
+- **Reduced Maintenance**: Translating only educational content (9 chapters) vs entire site (homepage, auth, navbar, footer, marketing pages).
+- **Security Simplicity**: Auth system remains in single language, avoiding complexities with error messages, validation, email templates.
+- **Clear User Expectation**: Textbook is multilingual, platform is English. Reduces cognitive load.
+
+**Implementation**:
+- **Translate**: Only files in `i18n/ur/docusaurus-plugin-content-docs/` (chapters + sidebar labels)
+- **Do NOT Translate**: `i18n/ur/docusaurus-theme-classic/navbar.json`, `footer.json`, `code.json`, or any non-docs content
+
+**File Structure**:
+```
+i18n/ur/
+  └── docusaurus-plugin-content-docs/
+      ├── current.json              # Sidebar labels only
+      └── current/
+          ├── part-1-foundations-lab/
+          │   ├── chapter-01-embodied-ai.mdx
+          │   └── ...
+          └── part-2-robotic-nervous-system/
+              └── ...
+```
+
+---
+
+### 4. Language Switching Behavior
+
+**Question**: Auto-redirect based on preference vs URL-based navigation?
+
+**Decision**: No Auto-Redirect, URL is Source of Truth
+
+**Rationale**:
+- **Predictable Behavior**: Users land on the URL they requested (shared links work correctly).
+- **Web Standards**: URL-based language selection is standard pattern (e.g., Wikipedia, Google Docs).
+- **Shareable Links**: `/ur/docs/...` URLs work for all recipients, regardless of their preferences.
+- **No localStorage Required**: Simpler, no privacy concerns, works in incognito mode.
+- **Respects User Intent**: If user clicks English link, show English (don't override with stored preference).
+
+**Docusaurus Behavior**:
+- User clicks localeDropdown → Docusaurus navigates to equivalent page in new locale
+- `/docs/chapter-01` → User selects "اردو" → Navigate to `/ur/docs/chapter-01`
+- No redirects, no localStorage checks, pure URL-based routing
+
+---
+
+### 5. RTL Layout Implementation
+
+**Question**: Custom CSS for RTL vs Docusaurus built-in support?
+
+**Decision**: Docusaurus Built-in RTL Support
+
+**Rationale**:
+- **Automatic**: When `direction: "rtl"` is set in locale config, Docusaurus theme automatically:
+  - Adds `dir="rtl"` to `<html>` element
+  - Applies RTL CSS transformations (text-align, padding, margins, flex-direction)
+  - Mirrors layout components (sidebar moves to right, navbar items flip)
+  - Preserves LTR for code blocks (keeps code readable)
+- **No Custom CSS**: Docusaurus theme CSS already includes RTL support for all components
+- **Tested & Maintained**: RTL support is part of Docusaurus core, used by many Arabic/Hebrew/Urdu sites
+
+**What Happens**:
+```html
+<!-- English page -->
+<html dir="ltr" lang="en-US">
+  <body>
+    <nav>...</nav>
+    <aside class="sidebar-left">...</aside>  <!-- Left side -->
+    <main>Text flows left-to-right</main>
+  </body>
+</html>
+
+<!-- Urdu page (automatic transformation) -->
+<html dir="rtl" lang="ur-PK">
+  <body>
+    <nav>...</nav>
+    <aside class="sidebar-right">...</aside>  <!-- Right side -->
+    <main>متن دائیں سے بائیں</main>  <!-- Right-to-left text -->
+  </body>
+</html>
+```
+
+---
+
+### 6. Deployment Configuration (Vercel)
+
+**Question**: How to deploy Docusaurus i18n to Vercel with subdirectory project structure?
+
+**Decision**: Configure Root Directory in Vercel Dashboard
+
+**Research Findings**:
+- Docusaurus projects in subdirectories require explicit Vercel configuration
+- **Framework Preset**: Must be set to "Docusaurus (v2+)" for auto-detection of build commands
+- **Root Directory**: Must be set to `frontend` (where package.json lives)
+- **Build Output**: Docusaurus automatically generates `build/` (English) and `build/ur/` (Urdu)
+- **No Manual Build Commands**: Vercel auto-detects `npm run build` when Framework Preset is configured
+
+**Vercel Dashboard Settings**:
+```
+Framework: Docusaurus (v2+)
+Root Directory: frontend
+Build Command: (auto-detected)
+Output Directory: (auto-detected as 'build')
+```
+
+**Why Not `vercel.json` Build Commands**:
+- Hardcoded paths in `vercel.json` break when Vercel's working directory changes
+- Framework Preset auto-detection is more reliable and maintained by Vercel
+- `vercel.json` should only contain API rewrites, not build configuration
+
+---
+
+## Decision Summary Table
+
+| Decision Point | Chosen Approach | Rejected Alternatives |
+|----------------|----------------|----------------------|
+| i18n System | Docusaurus Native | Custom components, Translation API |
+| Language UI | localeDropdown | Custom switcher, Footer links |
+| Translation Scope | Docs-only | Full site translation |
+| Language Switching | URL-based navigation | Auto-redirect, localStorage preference |
+| RTL Layout | Docusaurus automatic | Custom CSS, Manual transformations |
+| Deployment | Vercel Dashboard config | vercel.json build commands |
+
+---
+
+## Technical Trade-offs
+
+### Accepted Trade-offs
+
+1. **Manual Translation Required**: Pre-translated MDX files needed (benefit: accuracy, control over quality).
+2. **Page Navigation for Language Switch**: Switching languages requires page reload (benefit: standard web behavior, SEO-friendly, shareable URLs).
+3. **Docs-Only Translation**: Homepage/auth remain English (benefit: reduced maintenance, simpler auth UX).
+
+### Rejected Complexity
+
+1. **No Custom State Management**: No React Context, Redux, Zustand (avoided 200+ lines of boilerplate).
+2. **No Client-Side Routing Logic**: No custom URL manipulation, localStorage sync, or preference detection (avoided 100+ lines of edge case handling).
+3. **No Custom RTL CSS**: No manual text-align, flexbox reversals, or layout calculations (avoided 50+ lines of fragile CSS).
+
+---
+
+## Constitution Compliance
+
+All decisions align with project constitution:
+
+- **Principle I (Educational Excellence)**: Urdu translation expands accessibility without compromising content quality.
+- **Principle II (Technical Accuracy)**: Manual translations ensure technical terms are accurately conveyed.
+- **Principle III (Spec-Driven Development)**: Research phase completed before design/implementation.
+- **Principle X (YAGNI)**: Zero custom code. Pure configuration-based implementation.
+
+---
+
+## References
+
+- [Docusaurus i18n Tutorial](https://docusaurus.io/docs/i18n/tutorial)
 - [Docusaurus i18n Configuration](https://docusaurus.io/docs/api/docusaurus-config#i18n)
-
----
-
-### 4. URL Parameter Precedence Logic
-
-**Question**: How to ensure `?lang=ur` parameter overrides stored localStorage preference?
-
-**Decision**: Priority cascade: URL parameter > localStorage > default (English)
-
-**Rationale**:
-- **Specification Requirement**: FR-015 mandates URL parameter ensures recipients see sender's language choice "regardless of their stored preference".
-- **User Intent**: URL parameter represents explicit sharing intent. Should always take precedence.
-- **Fallback Strategy**: Without URL param, use localStorage (returning user). If neither, default to English (new user).
-
-**Implementation Pattern**:
-```typescript
-function getInitialLanguage(): 'en' | 'ur' {
-  // Priority 1: URL parameter (explicit override)
-  const urlParams = new URLSearchParams(window.location.search);
-  const urlLang = urlParams.get('lang');
-  if (urlLang === 'en' || urlLang === 'ur') {
-    return urlLang;
-  }
-
-  // Priority 2: localStorage (user preference)
-  try {
-    const storedLang = localStorage.getItem('preferredLanguage');
-    if (storedLang === 'en' || storedLang === 'ur') {
-      return storedLang;
-    }
-  } catch (e) {
-    // localStorage unavailable (privacy mode, etc.)
-    console.warn('localStorage unavailable:', e);
-  }
-
-  // Priority 3: Default to English
-  return 'en';
-}
-```
-
-**Edge Cases Handled**:
-- Invalid URL parameter values (e.g., `?lang=fr`) → fallback to localStorage/default
-- localStorage unavailable (privacy mode) → fallback to default
-- URL parameter present but localStorage has different value → URL wins
-
----
-
-### 5. Translation Availability Detection
-
-**Question**: How to detect if Urdu translation exists for current chapter?
-
-**Decision**: Check existence of translated markdown file path at build time (static JSON manifest)
-
-**Rationale**:
-- **Static Site Architecture**: Docusaurus builds static files at build time. Translation availability is known at build time, not runtime.
-- **Performance**: Checking file existence client-side (fetch requests) adds latency. Pre-computed manifest is instant.
-- **Reliability**: Build-time check prevents 404s. Button disabled if translation unavailable.
-
-**Implementation Pattern**:
-
-**Build-time script** (generates manifest):
-```typescript
-// scripts/generate-translation-manifest.js
-import fs from 'fs';
-import path from 'path';
-
-const docsDir = path.resolve(__dirname, '../frontend/docs');
-const urduDir = path.resolve(__dirname, '../frontend/i18n/ur/docusaurus-plugin-content-docs/current');
-
-const manifest = {};
-
-function scanDocs(dir, basePath = '') {
-  const files = fs.readdirSync(dir);
-
-  files.forEach(file => {
-    const filePath = path.join(dir, file);
-    const stat = fs.statSync(filePath);
-
-    if (stat.isDirectory()) {
-      scanDocs(filePath, path.join(basePath, file));
-    } else if (file.endsWith('.md') || file.endsWith('.mdx')) {
-      const relativePath = path.join(basePath, file);
-      const urduPath = path.join(urduDir, relativePath);
-      manifest[relativePath] = fs.existsSync(urduPath);
-    }
-  });
-}
-
-scanDocs(docsDir);
-fs.writeFileSync(
-  path.resolve(__dirname, '../frontend/src/translation-manifest.json'),
-  JSON.stringify(manifest, null, 2)
-);
-```
-
-**Runtime usage**:
-```typescript
-import translationManifest from '@/translation-manifest.json';
-
-function isTranslationAvailable(docPath: string): boolean {
-  return translationManifest[docPath] === true;
-}
-```
-
-**Alternatives Considered**:
-1. **Runtime fetch**: Rejected - adds HTTP requests, slower, requires error handling for 404s.
-2. **Always assume available**: Rejected - breaks user experience when translation missing (FR-011).
-3. **Manually maintained list**: Rejected - error-prone, requires manual updates after each translation.
-
----
-
-### 6. Logging & Analytics Strategy (Resolves Constitution Check Principle IX)
-
-**Question**: Should language preference changes be logged? How?
-
-**Decision**: Console logging in development; optional analytics integration via custom events
-
-**Rationale**:
-- **Development Debugging**: Console logs help debug localStorage issues, URL parameter parsing, and routing.
-- **Production Analytics**: Optional integration (Google Analytics, Plausible) via custom events. Not required for MVP.
-- **Privacy**: No PII collected. Only language preference ('en' or 'ur') and timestamp.
-- **Constitution Compliance**: Structured logging (JSON format) in development, sanitized events in production.
-
-**Implementation Pattern**:
-```typescript
-function switchLanguage(newLang: 'en' | 'ur') {
-  const previousLang = language;
-
-  // Development logging
-  if (process.env.NODE_ENV === 'development') {
-    console.log('[LanguageSwitcher]', {
-      event: 'language_switch',
-      from: previousLang,
-      to: newLang,
-      source: window.location.search.includes('lang=') ? 'url_parameter' : 'button_click',
-      timestamp: new Date().toISOString(),
-    });
-  }
-
-  // Production analytics (optional)
-  if (typeof window.gtag !== 'undefined') {
-    window.gtag('event', 'language_switch', {
-      from_language: previousLang,
-      to_language: newLang,
-    });
-  }
-
-  setLanguage(newLang);
-  localStorage.setItem('preferredLanguage', newLang);
-  // ... rest of implementation
-}
-```
-
-**Alternatives Considered**:
-1. **No logging**: Rejected - makes debugging difficult.
-2. **Always log to console**: Rejected - pollutes production console unnecessarily.
-3. **Required analytics**: Rejected - not all users want analytics. Optional is better.
-
----
-
-## Summary of Decisions
-
-| Unknown | Decision | Impact |
-|---------|----------|--------|
-| State management | Custom React Hook (`useLanguagePreference`) | Lightweight, follows Docusaurus patterns |
-| i18n integration | Swizzle `DocItem` + Docusaurus Router navigation | Official pattern, SEO-friendly |
-| RTL layout | CSS `[dir="rtl"]` attribute selector | Automatic via Docusaurus i18n config |
-| URL precedence | URL param > localStorage > default | Ensures sharing behavior (FR-015) |
-| Translation detection | Build-time manifest (JSON) | Fast, reliable, no runtime overhead |
-| Logging strategy | Console (dev) + optional analytics (prod) | Debuggable, privacy-respecting |
-
-**All unknowns resolved.** Ready to proceed to Phase 1 (Design & Contracts).
-
----
-
-**References**:
-- [Docusaurus i18n Official Guide](https://docusaurus.io/docs/i18n/introduction)
-- [Docusaurus Swizzling](https://docusaurus.io/docs/swizzling)
-- [React Hooks Best Practices](https://react.dev/reference/react)
-- [MDN CSS :dir() Selector](https://developer.mozilla.org/en-US/docs/Web/CSS/:dir)
+- [Vercel Docusaurus Deployment](https://vercel.com/guides/deploying-docusaurus-with-vercel)
+- [W3C: Structural Markup and Right-to-Left Text in HTML](https://www.w3.org/International/questions/qa-html-dir)
