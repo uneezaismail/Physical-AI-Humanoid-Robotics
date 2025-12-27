@@ -35,7 +35,7 @@ export const AuthPage: React.FC = () => {
         setError(error.message || 'Login failed');
       } else {
         // Redirect to home/docs on success
-        window.location.href = "/docs/part-1-foundations-lab/chapter-1-embodied-ai";
+        window.location.href = "/docs/part-1-foundations-lab/chapter-01-embodied-ai";
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An unexpected error occurred');
@@ -76,9 +76,9 @@ export const AuthPage: React.FC = () => {
       };
 
       await signUpWithProfile(signupPayload);
-      
+
       // Redirect to home/docs on success
-      window.location.href = "/docs/part-1-foundations-lab/chapter-1-embodied-ai";
+      window.location.href = "/docs/part-1-foundations-lab/chapter-01-embodied-ai";
     } catch (err) {
       console.error("Signup error:", err);
       setError(err instanceof Error ? err.message : 'Signup failed');
