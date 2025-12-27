@@ -1,0 +1,134 @@
+{
+  "version.label": {
+    "message": "Next",
+    "description": "The label for version current"
+  },
+  "sidebar.tutorialSidebar.category.Part I: Foundations & Lab": {
+    "message": "حصہ I: بنیادیں اور لیبارٹری",
+    "description": "The label for category 'Part I: Foundations & Lab' in sidebar 'tutorialSidebar'"
+  },
+  "sidebar.tutorialSidebar.category.Part II: Robotic Nervous System": {
+    "message": "حصہ II: روبوٹک اعصابی نظام",
+    "description": "The label for category 'Part II: Robotic Nervous System' in sidebar 'tutorialSidebar'"
+  },
+  "sidebar.tutorialSidebar.category.Part III: Digital Twin": {
+    "message": "حصہ III: ڈیجیٹل جڑواں",
+    "description": "The label for category 'Part III: Digital Twin' in sidebar 'tutorialSidebar'"
+  },
+  "sidebar.tutorialSidebar.category.Part IV: AI Robot Brain": {
+    "message": "حصہ IV: AI روبوٹ دماغ",
+    "description": "The label for category 'Part IV: AI Robot Brain' in sidebar 'tutorialSidebar'"
+  },
+  "sidebar.tutorialSidebar.category.Part V: VLA Capstone": {
+    "message": "حصہ V: VLA کیپسٹون",
+    "description": "The label for category 'Part V: VLA Capstone' in sidebar 'tutorialSidebar'"
+  },
+  "sidebar.tutorialSidebar.doc.Chapter 1: Embodied AI - Where Intelligence Meets the Physical World": {
+    "message": "باب 1: جسمانی AI - جہاں ذہانت جسمانی دنیا سے ملتی ہے",
+    "description": "The label for the doc item 'Chapter 1: Embodied AI - Where Intelligence Meets the Physical World' in sidebar 'tutorialSidebar', linking to the doc part-1-foundations-lab/chapter-01-embodied-ai"
+  },
+  "sidebar.tutorialSidebar.doc.Chapter 2: Hardware Setup - Building Your Physical AI Foundation": {
+    "message": "باب 2: ہارڈویئر سیٹ اپ - اپنی فزیکل AI بنیاد تعمیر کرنا",
+    "description": "The label for the doc item 'Chapter 2: Hardware Setup - Building Your Physical AI Foundation' in sidebar 'tutorialSidebar', linking to the doc part-1-foundations-lab/chapter-02-hardware-setup"
+  },
+  "sidebar.tutorialSidebar.doc.Chapter 3: Physical AI Architecture - The Three-Tier System": {
+    "message": "باب 3: فزیکل AI آرکیٹیکچر - تین درجے کا نظام",
+    "description": "The label for the doc item 'Chapter 3: Physical AI Architecture - The Three-Tier System' in sidebar 'tutorialSidebar', linking to the doc part-1-foundations-lab/chapter-03-physical-ai-architecture"
+  },
+  "sidebar.tutorialSidebar.doc.Chapter 4: ROS2 Architecture - The Nervous System of Physical AI": {
+    "message": "باب 4: ROS2 آرکیٹیکچر - فزیکل AI کا اعصابی نظام",
+    "description": "The label for the doc item 'Chapter 4: ROS2 Architecture - The Nervous System of Physical AI' in sidebar 'tutorialSidebar', linking to the doc part-2-robotic-nervous-system/chapter-04-ros2-architecture"
+  },
+  "sidebar.tutorialSidebar.doc.Chapter 5: Nodes, Topics, Services - The Building Blocks of ROS2": {
+    "message": "باب 5: نوڈز، ٹاپکس، سروسز - ROS2 کے بنیادی عناصر",
+    "description": "The label for the doc item 'Chapter 5: Nodes, Topics, Services - The Building Blocks of ROS2' in sidebar 'tutorialSidebar', linking to the doc part-2-robotic-nervous-system/chapter-05-nodes-topics-services"
+  },
+  "sidebar.tutorialSidebar.doc.Chapter 6: Python rclpy - Building ROS2 Nodes in Python": {
+    "message": "باب 6: Python rclpy - Python میں ROS2 نوڈز بنانا",
+    "description": "The label for the doc item 'Chapter 6: Python rclpy - Building ROS2 Nodes in Python' in sidebar 'tutorialSidebar', linking to the doc part-2-robotic-nervous-system/chapter-06-python-rclpy"
+  },
+  "sidebar.tutorialSidebar.doc.Chapter 7: URDF Humanoids - Describing Robots with Unified Robot Description Format": {
+    "message": "Chapter 7: URDF Humanoids - Describing Robots with Unified Robot Description Format",
+    "description": "The label for the doc item 'Chapter 7: URDF Humanoids - Describing Robots with Unified Robot Description Format' in sidebar 'tutorialSidebar', linking to the doc part-2-robotic-nervous-system/chapter-07-urdf-humanoids"
+  },
+  "sidebar.tutorialSidebar.doc.Chapter 8: Launch Parameters - Configuring and Launching ROS2 Systems": {
+    "message": "Chapter 8: Launch Parameters - Configuring and Launching ROS2 Systems",
+    "description": "The label for the doc item 'Chapter 8: Launch Parameters - Configuring and Launching ROS2 Systems' in sidebar 'tutorialSidebar', linking to the doc part-2-robotic-nervous-system/chapter-08-launch-parameters"
+  },
+  "sidebar.tutorialSidebar.doc.Chapter 9: First ROS2 Package - Creating Complete ROS2 Applications": {
+    "message": "Chapter 9: First ROS2 Package - Creating Complete ROS2 Applications",
+    "description": "The label for the doc item 'Chapter 9: First ROS2 Package - Creating Complete ROS2 Applications' in sidebar 'tutorialSidebar', linking to the doc part-2-robotic-nervous-system/chapter-09-first-ros2-package"
+  },
+  "sidebar.tutorialSidebar.doc.Chapter 10: Physics Simulation Intro - Bridging Digital and Physical Worlds": {
+    "message": "Chapter 10: Physics Simulation Intro - Bridging Digital and Physical Worlds",
+    "description": "The label for the doc item 'Chapter 10: Physics Simulation Intro - Bridging Digital and Physical Worlds' in sidebar 'tutorialSidebar', linking to the doc part-3-digital-twin/chapter-10-physics-simulation-intro"
+  },
+  "sidebar.tutorialSidebar.doc.Chapter 11: Gazebo Setup - Creating Simulation Environments for Robotics": {
+    "message": "Chapter 11: Gazebo Setup - Creating Simulation Environments for Robotics",
+    "description": "The label for the doc item 'Chapter 11: Gazebo Setup - Creating Simulation Environments for Robotics' in sidebar 'tutorialSidebar', linking to the doc part-3-digital-twin/chapter-11-gazebo-setup"
+  },
+  "sidebar.tutorialSidebar.doc.Chapter 12: URDF-SDF Formats - Converting Robot Models for Simulation": {
+    "message": "Chapter 12: URDF-SDF Formats - Converting Robot Models for Simulation",
+    "description": "The label for the doc item 'Chapter 12: URDF-SDF Formats - Converting Robot Models for Simulation' in sidebar 'tutorialSidebar', linking to the doc part-3-digital-twin/chapter-12-urdf-sdf-formats"
+  },
+  "sidebar.tutorialSidebar.doc.Chapter 13: Sensor Simulation - Digital Senses for Physical AI": {
+    "message": "Chapter 13: Sensor Simulation - Digital Senses for Physical AI",
+    "description": "The label for the doc item 'Chapter 13: Sensor Simulation - Digital Senses for Physical AI' in sidebar 'tutorialSidebar', linking to the doc part-3-digital-twin/chapter-13-sensor-simulation"
+  },
+  "sidebar.tutorialSidebar.doc.Chapter 14: Unity Visualization - Immersive Digital Twins with Unity 3D": {
+    "message": "Chapter 14: Unity Visualization - Immersive Digital Twins with Unity 3D",
+    "description": "The label for the doc item 'Chapter 14: Unity Visualization - Immersive Digital Twins with Unity 3D' in sidebar 'tutorialSidebar', linking to the doc part-3-digital-twin/chapter-14-unity-visualization"
+  },
+  "sidebar.tutorialSidebar.doc.Chapter 15: Realistic Environments - Creating Authentic Simulation Worlds": {
+    "message": "Chapter 15: Realistic Environments - Creating Authentic Simulation Worlds",
+    "description": "The label for the doc item 'Chapter 15: Realistic Environments - Creating Authentic Simulation Worlds' in sidebar 'tutorialSidebar', linking to the doc part-3-digital-twin/chapter-15-realistic-environments"
+  },
+  "sidebar.tutorialSidebar.doc.Chapter 16: Isaac Overview - NVIDIA's AI Robotics Platform": {
+    "message": "Chapter 16: Isaac Overview - NVIDIA's AI Robotics Platform",
+    "description": "The label for the doc item 'Chapter 16: Isaac Overview - NVIDIA's AI Robotics Platform' in sidebar 'tutorialSidebar', linking to the doc part-4-ai-robot-brain/chapter-16-isaac-overview"
+  },
+  "sidebar.tutorialSidebar.doc.Chapter 17: Isaac Sim - High-Fidelity Physics Simulation": {
+    "message": "Chapter 17: Isaac Sim - High-Fidelity Physics Simulation",
+    "description": "The label for the doc item 'Chapter 17: Isaac Sim - High-Fidelity Physics Simulation' in sidebar 'tutorialSidebar', linking to the doc part-4-ai-robot-brain/chapter-17-isaac-sim"
+  },
+  "sidebar.tutorialSidebar.doc.Chapter 18: Isaac ROS vSLAM - GPU-Accelerated Visual SLAM": {
+    "message": "Chapter 18: Isaac ROS vSLAM - GPU-Accelerated Visual SLAM",
+    "description": "The label for the doc item 'Chapter 18: Isaac ROS vSLAM - GPU-Accelerated Visual SLAM' in sidebar 'tutorialSidebar', linking to the doc part-4-ai-robot-brain/chapter-18-isaac-ros-vslam"
+  },
+  "sidebar.tutorialSidebar.doc.Chapter 19: Nav2 for Humanoid Navigation - Specialized Path Planning for Bipedal Robots": {
+    "message": "Chapter 19: Nav2 for Humanoid Navigation - Specialized Path Planning for Bipedal Robots",
+    "description": "The label for the doc item 'Chapter 19: Nav2 for Humanoid Navigation - Specialized Path Planning for Bipedal Robots' in sidebar 'tutorialSidebar', linking to the doc part-4-ai-robot-brain/chapter-19-nav2-for-humanoid-navigation"
+  },
+  "sidebar.tutorialSidebar.doc.Chapter 20: Humanoid Kinematics - Forward and Inverse Kinematics for Bipedal Robots": {
+    "message": "Chapter 20: Humanoid Kinematics - Forward and Inverse Kinematics for Bipedal Robots",
+    "description": "The label for the doc item 'Chapter 20: Humanoid Kinematics - Forward and Inverse Kinematics for Bipedal Robots' in sidebar 'tutorialSidebar', linking to the doc part-4-ai-robot-brain/chapter-20-humanoid-kinematics"
+  },
+  "sidebar.tutorialSidebar.doc.Chapter 21: Bipedal Locomotion - Control Systems for Stable Walking": {
+    "message": "Chapter 21: Bipedal Locomotion - Control Systems for Stable Walking",
+    "description": "The label for the doc item 'Chapter 21: Bipedal Locomotion - Control Systems for Stable Walking' in sidebar 'tutorialSidebar', linking to the doc part-4-ai-robot-brain/chapter-21-bipedal-locomotion"
+  },
+  "sidebar.tutorialSidebar.doc.Chapter 22: Manipulation and Grasping - Robotic Interaction with Objects": {
+    "message": "Chapter 22: Manipulation and Grasping - Robotic Interaction with Objects",
+    "description": "The label for the doc item 'Chapter 22: Manipulation and Grasping - Robotic Interaction with Objects' in sidebar 'tutorialSidebar', linking to the doc part-4-ai-robot-brain/chapter-22-manipulation-grasping"
+  },
+  "sidebar.tutorialSidebar.doc.Chapter 23: Sim-to-Real Transfer - Bridging the Reality Gap": {
+    "message": "Chapter 23: Sim-to-Real Transfer - Bridging the Reality Gap",
+    "description": "The label for the doc item 'Chapter 23: Sim-to-Real Transfer - Bridging the Reality Gap' in sidebar 'tutorialSidebar', linking to the doc part-4-ai-robot-brain/chapter-23-sim-to-real"
+  },
+  "sidebar.tutorialSidebar.doc.Chapter 24: VLA Intro - Vision-Language-Action Models for Robotics": {
+    "message": "Chapter 24: VLA Intro - Vision-Language-Action Models for Robotics",
+    "description": "The label for the doc item 'Chapter 24: VLA Intro - Vision-Language-Action Models for Robotics' in sidebar 'tutorialSidebar', linking to the doc part-5-vla-capstone/chapter-24-vla-intro"
+  },
+  "sidebar.tutorialSidebar.doc.Chapter 25: Voice to Action - Speech-Driven Robotic Control": {
+    "message": "Chapter 25: Voice to Action - Speech-Driven Robotic Control",
+    "description": "The label for the doc item 'Chapter 25: Voice to Action - Speech-Driven Robotic Control' in sidebar 'tutorialSidebar', linking to the doc part-5-vla-capstone/chapter-25-voice-to-action"
+  },
+  "sidebar.tutorialSidebar.doc.Chapter 26: Cognitive Planning - High-Level Reasoning for Complex Tasks": {
+    "message": "Chapter 26: Cognitive Planning - High-Level Reasoning for Complex Tasks",
+    "description": "The label for the doc item 'Chapter 26: Cognitive Planning - High-Level Reasoning for Complex Tasks' in sidebar 'tutorialSidebar', linking to the doc part-5-vla-capstone/chapter-26-cognitive-planning"
+  },
+  "sidebar.tutorialSidebar.doc.Chapter 27: Capstone Project - Integrating VLA Systems": {
+    "message": "Chapter 27: Capstone Project - Integrating VLA Systems",
+    "description": "The label for the doc item 'Chapter 27: Capstone Project - Integrating VLA Systems' in sidebar 'tutorialSidebar', linking to the doc part-5-vla-capstone/chapter-27-capstone-project"
+  }
+}

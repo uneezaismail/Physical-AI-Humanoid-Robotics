@@ -1,5 +1,9 @@
 /**
  * Root wrapper - Adds global components to all pages
+ *
+ * Global Components:
+ * - FloatingChatButton: RAG chatbot interface
+ * - AuthModal: Authentication UI
  */
 
 import React, { useEffect } from "react";

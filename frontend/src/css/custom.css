@@ -40,9 +40,20 @@
 }
 
 
-body
-.html{
-  color:#ffffff
+body,
+html {
+  color: #ffffff;
+  overflow-x: hidden; /* Prevent horizontal scroll globally */
+  max-width: 100vw; /* Ensure page never exceeds viewport width */
+  position: relative; /* Establish positioning context */
+}
+
+/* Ensure all Docusaurus wrappers respect viewport width */
+#__docusaurus,
+.main-wrapper {
+  overflow-x: hidden;
+  max-width: 100vw;
+  width: 100%;
 }
 /* Force Dark Mode colors for initial load if preferred */
 [data-theme="dark"] {
