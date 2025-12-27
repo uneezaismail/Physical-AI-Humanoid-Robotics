@@ -23,7 +23,8 @@ const config: Config = {
   onBrokenMarkdownLinks: "warn",
 
   // CRITICAL for Vercel deployment with i18n
-  trailingSlash: false,
+  // Set to undefined for automatic trailing slash handling with i18n
+  trailingSlash: undefined,
 
   // Internationalization (i18n) configuration
   // Supports English (default) and Urdu with RTL layout
